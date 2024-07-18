@@ -2,3 +2,4 @@
 Pipfile
 .env
 career-connect/node_modules
+venv/
