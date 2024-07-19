@@ -34,23 +34,16 @@ class LoginAPIView(APIView):
 
         user = authenticate(request, email=email, password=password)
 
+        print(user)
+
         if user is not None:
             # User authentication succeeded
             refresh = RefreshToken.for_user(user)
 
-            # Determine the user's role and generate the redirect URL
-            role = user.role
-            if role == 'company':
-                redirect_url = reverse('company_homepage')
-            elif role == 'candidate':
-                redirect_url = reverse('candidate_homepage')
-            else:
-                redirect_url = reverse('homepage')  # Default homepage URL
-
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
-                'redirect_url': redirect_url
+                'redirect_url': user.role
             })
         else:
             # User authentication failed

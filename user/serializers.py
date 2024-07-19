@@ -12,7 +12,7 @@ class CandidateRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Candidate
-        fields = ['email', 'password', 'firstname', 'lastname', 'birthday','gender']
+        fields = ['email', 'password', 'firstname', 'lastname', 'birthday', 'gender']
 
     def create(self, validated_data):
         email = validated_data['email']
