@@ -39,3 +39,16 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
         active = 'True'
         company = Company.objects.create(user=user, active = active, **validated_data)
         return company
+    
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+
+        # Custom validation logic, if needed
+
+        return data
