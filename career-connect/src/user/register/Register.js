@@ -64,6 +64,9 @@ const Register = () => {
         try {
             const response = await axios.post('http://127.0.0.1:8000/api/login/', loginForm);
             console.log('Login successful:', response.data);
+            localStorage.setItem('token', response.data.access);
+            localStorage.setItem('refresh_token', response.data.refresh);
+            localStorage.setItem('role', response.data.redirect_url);
             const redirect_url = '/' + response.data.redirect_url;
             navigate(redirect_url)
         } catch (error) {
