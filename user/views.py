@@ -1,6 +1,8 @@
 from django.shortcuts import render
 
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
 from .models import User, Candidate, Company
 from .serializers import UserSerializer, CandidateRegisterSerializer, CompanyRegisterSerializer, LoginSerializer
 from rest_framework.views import APIView
@@ -10,21 +12,27 @@ from django.contrib.auth import authenticate
 from django.urls import reverse
 
 
-
 class UserCreateView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
 class CandidateRegisterView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Candidate.objects.all()
     serializer_class = CandidateRegisterSerializer
 
+
 class CompanyRegisterView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Company.objects.all()
     serializer_class = CompanyRegisterSerializer
 
 
 class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -33,8 +41,6 @@ class LoginAPIView(APIView):
         password = serializer.validated_data.get('password')
 
         user = authenticate(request, email=email, password=password)
-
-        print(user)
 
         if user is not None:
             # User authentication succeeded
@@ -48,3 +54,10 @@ class LoginAPIView(APIView):
         else:
             # User authentication failed
             return Response({'error': 'Invalid credentials'}, status=401)
+
+
+class ProtectedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"message": "This is a protected view!"})

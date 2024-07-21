@@ -46,6 +46,7 @@ class Candidate(models.Model):
     active = models.BooleanField(default=True)
     resume = models.TextField()
 
+
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=200)
