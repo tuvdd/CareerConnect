@@ -5,7 +5,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faLocationDot} from '@fortawesome/free-solid-svg-icons'
 import CreateJobForm from "../components/CreateJobForm";
 import JobCard from "../components/JobCard";
-
+import CompanyProfile from "../components/CompanyProfile";
 const CompanyHomepage = () => {
     const jobData = {
         logo: '/path/to/logo.png',
@@ -21,15 +21,16 @@ const CompanyHomepage = () => {
         skills: ['Java', 'Python', '.NET', 'Fintech', 'Cloud'],
         timePosted: 'Đăng 39 phút trước',
     };
-    const [selectedOption, setSelectedOption] = useState('createJob');
+    const [selectedOption, setSelectedOption] = useState('aboutCompany');
 
     function handleOptionClick(option) {
         setSelectedOption(option)
     }
 
     return (
-        <div className="container bg-gray-100 min-h-screen w-screen pt-20">
+        <div className="container min-h-screen max-w-screen-2xl pt-20 ">
             <Navbar/>
+            <div className="container  bg-gray-100 ml-60 ">
             <div className="container w-full h-60 bg-pink-200 flex flex-col items-center justify-center p-4">
                 <div className="flex w-full justify-center">
                     <img src="" alt="Company Logo"
@@ -47,6 +48,10 @@ const CompanyHomepage = () => {
             <div className="container w-full h-fit flex flex-col items-center justify-center">
                 <div className='w-full flex justify-center mb-5 bg-white'>
                     <button
+                        className={`text-2xl cursor-pointer p-5 border-b border-black ${selectedOption === 'aboutCompany' ? 'font-bold text-red-500 border-b-2 border-red-500' : ''}`}
+                        onClick={() => handleOptionClick('aboutCompany')}>Giới thiệu
+                    </button>
+                    <button
                         className={`text-2xl cursor-pointer p-5 border-b border-black ${selectedOption === 'createJob' ? 'font-bold text-red-500 border-b-2 border-red-500' : ''}`}
                         onClick={() => handleOptionClick('createJob')}>Thêm công việc
                     </button>
@@ -55,12 +60,16 @@ const CompanyHomepage = () => {
                         onClick={() => handleOptionClick('viewJobs')}>Công việc đã tạo
                     </button>
                 </div>
+                {selectedOption === 'aboutCompany' && (
+                    <CompanyProfile/>
+                )}
                 {selectedOption === 'createJob' && (
                     <CreateJobForm/>
                 )}
                 {selectedOption === 'viewJobs' && (
                     <JobCard {...jobData} />
                 )}
+            </div>
             </div>
         </div>
     )
