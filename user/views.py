@@ -1,10 +1,16 @@
 from django.shortcuts import render
 
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import User, Candidate, Company
-from .serializers import UserSerializer, CandidateRegisterSerializer, CompanyRegisterSerializer, LoginSerializer
+from .serializers import (
+    UserSerializer,
+    CandidateRegisterSerializer,
+    CompanyRegisterSerializer,
+    LoginSerializer,
+    CandidateSerializer,
+)
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -37,8 +43,8 @@ class LoginAPIView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        email = serializer.validated_data.get('email')
-        password = serializer.validated_data.get('password')
+        email = serializer.validated_data.get("email")
+        password = serializer.validated_data.get("password")
 
         user = authenticate(request, email=email, password=password)
 
@@ -46,14 +52,16 @@ class LoginAPIView(APIView):
             # User authentication succeeded
             refresh = RefreshToken.for_user(user)
 
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'redirect_url': user.role
-            })
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "redirect_url": user.role,
+                }
+            )
         else:
             # User authentication failed
-            return Response({'error': 'Invalid credentials'}, status=401)
+            return Response({"error": "Invalid credentials"}, status=401)
 
 
 class ProtectedView(APIView):
@@ -61,3 +69,11 @@ class ProtectedView(APIView):
 
     def get(self, request):
         return Response({"message": "This is a protected view!"})
+
+
+class CandidateProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = CandidateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return Candidate.objects.get(user=self.request.user)
