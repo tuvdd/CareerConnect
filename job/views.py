@@ -19,6 +19,13 @@ class JobDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+class JobListByCompanyAPIView(generics.ListAPIView):
+    serializer_class = JobSerializer  
+    permission_classes = [permissions.IsAuthenticated]  
+
+    def get_queryset(self):
+        company_id = self.kwargs['company_id']
+        return Job.objects.filter(company_id=company_id)
 
 class ApplicationCreateAPIView(generics.CreateAPIView):
     queryset = Application.objects.all()
@@ -29,6 +36,22 @@ class ApplicationListAPIView(generics.ListAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAdminUser]
+
+class ApplicationListByJobAPIView(generics.ListAPIView):
+    serializer_class = ApplicationSerializer  
+    permission_classes = [permissions.IsAuthenticated]  
+
+    def get_queryset(self):
+        job_id = self.kwargs['job_id']
+        return Application.objects.filter(job_id=job_id)
+
+class ApplicationListByCandidateAPIView(generics.ListAPIView):
+    serializer_class = ApplicationSerializer  
+    permission_classes = [permissions.IsAuthenticated]  
+
+    def get_queryset(self):
+        candidate_id = self.kwargs['candidate_id']
+        return Application.objects.filter(candidate_id=candidate_id)
 
 class ApplicationDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Application.objects.all()
