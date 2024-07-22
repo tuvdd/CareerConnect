@@ -71,6 +71,10 @@ class ProtectedView(APIView):
     def get(self, request):
         return Response({"message": "This is a protected view!"})
 
+class CandidateViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Candidate.objects.all()
+    serializer_class = CandidateSerializer
 
 class CandidateListAPIView(generics.ListAPIView):
     queryset = Candidate.objects.all()
