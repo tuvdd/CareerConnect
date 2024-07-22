@@ -62,14 +62,4 @@ class LoginSerializer(serializers.Serializer):
 class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = [
-            "user",
-            "firstname",
-            "lastname",
-            "email",
-            "gender",
-            "birthday",
-            "address",
-            "active",
-            "resume",
-        ]
+        fields = '__all__'
