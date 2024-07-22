@@ -45,7 +45,7 @@ const CompanyProfile = () => {
     };
 
     return (
-        <div className="flex w-full">
+        <div className="flex w-full p-6">
             <div className="w-2/3 m-3 p-4 border-r bg-white shadow-lg rounded-lg">
                 <h2 className="text-xl font-bold mb-4">Company Information</h2>
                 {isEditingCompany ? (

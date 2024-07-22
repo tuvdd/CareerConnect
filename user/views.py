@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import User, Candidate, Company
@@ -72,13 +72,6 @@ class ProtectedView(APIView):
         return Response({"message": "This is a protected view!"})
 
 
-class CandidateProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = CandidateSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        return Candidate.objects.get(user=self.request.user)
-    
 class CandidateListAPIView(generics.ListAPIView):
     queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer

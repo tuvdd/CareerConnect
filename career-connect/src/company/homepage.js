@@ -28,10 +28,10 @@ const CompanyHomepage = () => {
     }
 
     return (
-        <div className="container min-h-screen max-w-screen-2xl pt-20 ">
+        <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20 ">
             <Navbar/>
-            <div className="container  bg-gray-100 ml-60 ">
-            <div className="container w-full h-60 bg-pink-200 flex flex-col items-center justify-center p-4">
+            <div className="container bg-gray-100">
+            <div className="container w-full h-60 lg:bg-[url('https://c.topdevvn.com/v4/assets/images/bg-search.jpg')] flex flex-col items-center justify-center p-4">
                 <div className="flex w-full justify-center">
                     <img src="" alt="Company Logo"
                          className="w-52 h-36 mr-10 border border-gray-200 shadow-md rounded-md"/>
