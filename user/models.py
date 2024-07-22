@@ -37,25 +37,25 @@ class User(AbstractBaseUser):
 
 class Candidate(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    image = models.CharField(max_length=200, default="sample.jpg")    
     firstname = models.CharField(max_length=100)
     lastname = models.CharField(max_length=100)
-    email = models.EmailField()
-    gender = models.CharField(max_length=10)
     birthday = models.DateField()
     address = models.CharField(max_length=200)
-    active = models.BooleanField(default=True)
+    gender = models.CharField(max_length=10)
     resume = models.TextField()
+    active = models.CharField(max_length=100, default="Activated")
 
 
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    logo = models.CharField(max_length=200, default="sample.jpg")    
     name = models.CharField(max_length=200)
-    description = models.TextField()
     address = models.CharField(max_length=200)
-    email = models.EmailField()
-    phone = models.CharField(max_length=20)
-    active = models.BooleanField(default=True)
     field = models.CharField(max_length=200)
+    phone = models.CharField(max_length=20)
+    description = models.TextField()
+    active = models.CharField(max_length=100, default="Activated")
 
 
 class Admin(models.Model):

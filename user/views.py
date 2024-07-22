@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import User, Candidate, Company
@@ -10,6 +10,7 @@ from .serializers import (
     CompanyRegisterSerializer,
     LoginSerializer,
     CandidateSerializer,
+    CompanySerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -77,3 +78,11 @@ class CandidateProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return Candidate.objects.get(user=self.request.user)
+    
+class CandidateViewSet(viewsets.ModelViewSet):
+    queryset = Candidate.objects.all()
+    serializer_class = CandidateSerializer
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer

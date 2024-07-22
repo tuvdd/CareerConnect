@@ -17,14 +17,13 @@ class CandidateRegisterSerializer(serializers.ModelSerializer):
         fields = ["email", "password", "firstname", "lastname", "birthday", "gender"]
 
     def create(self, validated_data):
-        email = validated_data["email"]
+        email = validated_data.pop("email") # Remove the email field
         password = validated_data.pop("password")  # Remove the password field
 
         user = User.objects.create_user(
             email=email, password=password, role="candidate"
         )
-        active = "True"
-        candidate = Candidate.objects.create(user=user, active=active, **validated_data)
+        candidate = Candidate.objects.create(user=user, **validated_data)
         return candidate
 
 
@@ -34,15 +33,14 @@ class CompanyRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ["name", "password", "address", "email", "field"]
+        fields = ["email", "password", "name",  "field", "address", "description"]
 
     def create(self, validated_data):
-        email = validated_data["email"]
+        email = validated_data.pop("email")
         password = validated_data.pop("password")  # Remove the password field
 
         user = User.objects.create_user(email=email, password=password, role="company")
-        active = "True"
-        company = Company.objects.create(user=user, active=active, **validated_data)
+        company = Company.objects.create(user=user, **validated_data)
         return company
 
 
@@ -62,14 +60,9 @@ class LoginSerializer(serializers.Serializer):
 class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = [
-            "user",
-            "firstname",
-            "lastname",
-            "email",
-            "gender",
-            "birthday",
-            "address",
-            "active",
-            "resume",
-        ]
+        fields = '__all__'
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = '__all__'
