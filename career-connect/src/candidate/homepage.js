@@ -31,14 +31,14 @@ const CandidateHomepage = () => {
     };
 
     return (
-        <div className="container bg-gray-100 min-h-screen w-screen pt-20">
+        <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20">
             <Navbar/>
-            <div className="container w-full h-60 bg-pink-200 flex flex-col items-center justify-center p-4">
+            <div className="container w-full h-60 lg:bg-[url('https://c.topdevvn.com/v4/assets/images/bg-search.jpg')] flex flex-col items-center justify-center p-4">
                 <div className="w-4/5">
                     <h1 className="text-3xl font-bold mb-4">Tìm kiếm</h1>
                     <form
                         onSubmit={handleSearchSubmit}
-                        className="w-full flex items-center rounded bg-white p-3"
+                        className="w-full flex items-center rounded bg-white p-3 shadow-md"
                     >
                         <input
                             type="text"
