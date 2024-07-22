@@ -10,6 +10,7 @@ from .serializers import (
     CompanyRegisterSerializer,
     LoginSerializer,
     CandidateSerializer,
+    CompanySerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -71,7 +72,22 @@ class ProtectedView(APIView):
         return Response({"message": "This is a protected view!"})
 
 
-class CandidateViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+class CandidateListAPIView(generics.ListAPIView):
     queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer
+    permission_classes = [permissions.IsAdminUser]
+    
+class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Candidate.objects.all()
+    serializer_class = CandidateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class CompanyListAPIView(generics.ListAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    permission_classes = [permissions.IsAdminUser]
+
+class CompanyDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    permission_classes = [permissions.IsAuthenticated]
