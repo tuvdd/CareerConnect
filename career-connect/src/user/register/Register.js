@@ -143,21 +143,11 @@ const Register = () => {
 
     return (
         <div>
-            <div className='h-20'>
-                <div className='text-6xl text-center text-red-600 h-full pt-2'> CAREER CONNECT</div>
-            </div>
-            <div className='h-12 bg-gray-950'>
-                <div className='w-full h-full flex justify-center pt-2'>
-                    <div className='text-xl text-white'> Việc làm IT</div>
-                    <div className='text-xl text-white mx-28'> Tạo CV</div>
-                    <div className='text-xl text-white'> Công ty IT</div>
-                </div>
-            </div>
             <div className="flex justify-center">
                 {/* Đăng nhập */}
-                <div className="w-1/2 h-auto p-8 bg-pink-200 flex flex-col justify-center">
-                    <h2 className="text-4xl font-bold mb-4 text-center">Đăng nhập</h2>
-                    <div className="m-20 bg-white h-auto">
+                <div className="w-1/2 h-auto p-8 bg-login flex flex-col justify-center">
+                    <h2 className="text-4xl font-bold text-center">Đăng nhập</h2>
+                    <div className="m-20 bg-white h-auto rounded shadow-md p-6">
                         <form onSubmit={handleLoginSubmit} className="space-y-4 m-4">
                             <div className="pt-4">
                                 <label htmlFor="email" className="block mb-1">Email</label>

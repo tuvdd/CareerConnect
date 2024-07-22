@@ -1,25 +1,42 @@
 import React from "react";
-import {Link} from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
+import Dropdown from "./Dropdown";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faMessage} from '@fortawesome/free-solid-svg-icons'
 
 const Navbar = () => {
+    const navigate = useNavigate();
+    const isAuthenticated = !!localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    const handleLogoClick = () => {
+        if (isAuthenticated) {
+            navigate(`/${role}`);
+        } else {
+            navigate('/');
+        }
+    };
+
     return (
-        <nav className={"w-full h-20 bg-white fixed top-0 z-50 "}>
+        <nav className={"w-full h-20 bg-white fixed top-0 z-50 shadow-md"}>
             <div className="container mx-auto flex h-full items-center justify-between px-4">
                 <div className="flex items-center space-x-4">
-                    <Link to="/">
+                    <div onClick={handleLogoClick} className="cursor-pointer">
                         <img
                             className="w-auto h-14"
                             src="/logo.png"
                             alt="Your Logo"
                         />
-                    </Link>
+                    </div>
+                    <p className="font-extrabold text-2xl">CAREER CONNECT</p>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <Link to="/register">
-                        <button className="border-none bg-red-500 rounded px-5 py-3 text-white font-bold">
-                            Đăng nhập
+                    <div className="flex">
+                        <button><FontAwesomeIcon icon={faMessage}
+                                                 className="mr-4 p-6 hover:bg-gray-200 active:bg-gray-200 rounded-lg"/>
                         </button>
-                    </Link>
+                        <Dropdown/>
+                    </div>
                 </div>
             </div>
         </nav>
