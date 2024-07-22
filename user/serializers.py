@@ -8,17 +8,17 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CandidateRegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
+class CandidateRegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = Candidate
-        fields = ["email", "password", "firstname", "lastname", "birthday", "gender"]
+    firstname = serializers.CharField()
+    lastname = serializers.CharField()
+    birthday = serializers.DateField()
+    gender = serializers.CharField()
 
     def create(self, validated_data):
-        email = validated_data.pop("email") # Remove the email field
-        password = validated_data.pop("password")  # Remove the password field
+        email = validated_data.pop("email")
+        password = validated_data.pop("password")
 
         user = User.objects.create_user(
             email=email, password=password, role="candidate"
@@ -26,23 +26,23 @@ class CandidateRegisterSerializer(serializers.ModelSerializer):
         candidate = Candidate.objects.create(user=user, **validated_data)
         return candidate
 
-
-class CompanyRegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField()
+class CompanyRegisterSerializer(serializers.Serializer):
+    email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = Company
-        fields = ["email", "password", "name",  "field", "address", "description"]
+    name = serializers.CharField()
+    field = serializers.CharField()
+    address = serializers.CharField()
+    description = serializers.CharField()
 
     def create(self, validated_data):
         email = validated_data.pop("email")
-        password = validated_data.pop("password")  # Remove the password field
+        password = validated_data.pop("password")
 
-        user = User.objects.create_user(email=email, password=password, role="company")
+        user = User.objects.create_user(
+            email=email, password=password, role="company"
+        )
         company = Company.objects.create(user=user, **validated_data)
         return company
-
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
