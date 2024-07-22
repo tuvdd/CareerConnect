@@ -50,7 +50,9 @@ urlpatterns = [
                 ),
                 path("protected/", ProtectedView.as_view(), name="protected"),
                 path(
-                    "profile/", CandidateProfileView.as_view(), name="candidate-profile"
+                    "candidate/profile/",
+                    CandidateProfileView.as_view(),
+                    name="candidate_profile",
                 ),
             ]
         ),

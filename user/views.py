@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import User, Candidate, Company
@@ -71,9 +71,41 @@ class ProtectedView(APIView):
         return Response({"message": "This is a protected view!"})
 
 
-class CandidateProfileView(generics.RetrieveUpdateAPIView):
+class CandidateProfileView(APIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = CandidateSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return Candidate.objects.get(user=self.request.user)
+    def get(self, request):
+        try:
+            candidate = Candidate.objects.get(user=request.user)
+            serializer = self.serializer_class(candidate)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Candidate.DoesNotExist:
+            return Response(
+                {"error": "Candidate not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    def put(self, request):
+        try:
+            candidate = Candidate.objects.get(user=request.user)
+            serializer = self.serializer_class(
+                candidate, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Candidate.DoesNotExist:
+            return Response(
+                {"error": "Candidate not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request):
+        try:
+            candidate = Candidate.objects.get(user=request.user)
+            candidate.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Candidate.DoesNotExist:
+            return Response(
+                {"error": "Candidate not found"}, status=status.HTTP_404_NOT_FOUND
+            )
