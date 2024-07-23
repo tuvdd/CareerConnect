@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
+import NotificationPopup from "../../components/NotificationPopup";
 
 const Register = () => {
     const navigate = useNavigate();
@@ -280,9 +281,9 @@ const Register = () => {
                                         className="border border-gray-300 rounded px-3 py-2 w-full"
                                     >
                                         <option value="">Chọn giới tính</option>
-                                        <option value="male">Nam</option>
-                                        <option value="female">Nữ</option>
-                                        <option value="other">Khác</option>
+                                        <option value="Male">Nam</option>
+                                        <option value="Female">Nữ</option>
+                                        <option value="Other">Khác</option>
                                     </select>
                                 </div>
                                 <button
@@ -375,21 +376,6 @@ const Register = () => {
                     </div>
                 </div>
             </div>
-        </div>
-    );
-};
-
-const NotificationPopup = ({error, message, onClose}) => {
-    if (!message) return null;
-
-    const backgroundColor = (error === 'true') ? 'bg-red-500' : 'bg-green-500';
-
-    return (
-        <div className={`fixed bottom-4 right-4 ${backgroundColor} text-white p-4 rounded shadow-lg`}>
-            <p>{message}</p>
-            <button onClick={onClose} className="absolute top-2 right-2 text-black">
-                ×
-            </button>
         </div>
     );
 };
