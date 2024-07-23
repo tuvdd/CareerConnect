@@ -10,7 +10,7 @@ function Dropdown() {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
-        localStorage.removeItem('refresh');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('role');
         navigate('/register');
     };

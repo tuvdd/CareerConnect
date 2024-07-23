@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 import environ
+import pyrebase
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,6 +41,20 @@ ALLOWED_HOSTS = []
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+FIREBASE_CONFIG = {
+    "apiKey": env('FIREBASE_API_KEY'),
+    "authDomain": env('FIREBASE_AUTH_DOMAIN'),
+    "databaseURL": '',
+    "projectId": env('FIREBASE_PROJECT_ID'),
+    "storageBucket": env('FIREBASE_STORAGE_BUCKET'),
+    "messagingSenderId": env('FIREBASE_SENDER_ID'),
+    "appId": env('FIREBASE_APP_ID'),
+    "measurementId": env('FIREBASE_MEASUREMENT_ID')
+}
+
+firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
+storage = firebase.storage()
 
 
 # Application definition

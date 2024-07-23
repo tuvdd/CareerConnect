@@ -26,6 +26,7 @@ class CandidateRegisterSerializer(serializers.Serializer):
         candidate = Candidate.objects.create(user=user, **validated_data)
         return candidate
 
+
 class CompanyRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)
@@ -44,6 +45,7 @@ class CompanyRegisterSerializer(serializers.Serializer):
         company = Company.objects.create(user=user, **validated_data)
         return company
 
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -61,9 +63,14 @@ class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
         fields = '__all__'
+        extra_kwargs = {
+            'resume': {'required': False},
+            'user': {'required': False},
+            'active': {'required': False}
+        }
+
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = '__all__'
-
