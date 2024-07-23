@@ -20,14 +20,12 @@ const Navbar = () => {
     return (
         <nav className={"w-full h-20 bg-white fixed top-0 z-50 shadow-md"}>
             <div className="container mx-auto flex h-full items-center justify-between px-4">
-                <div className="flex items-center space-x-4">
-                    <div onClick={handleLogoClick} className="cursor-pointer">
-                        <img
-                            className="w-auto h-14"
-                            src="/logo.png"
-                            alt="Your Logo"
-                        />
-                    </div>
+                <div onClick={handleLogoClick} className="cursor-pointer flex items-center space-x-4">
+                    <img
+                        className="w-auto h-14"
+                        src="/logo.png"
+                        alt="Your Logo"
+                    />
                     <p className="font-extrabold text-2xl">CAREER CONNECT</p>
                 </div>
                 <div className="flex items-center space-x-4">

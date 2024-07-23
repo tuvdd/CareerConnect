@@ -5,17 +5,20 @@ from rest_framework import generics, permissions, viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from config import settings
-from .models import User, Candidate, Company
+from .models import User, Candidate, Company, Admin
 from .serializers import (
     UserSerializer,
     CandidateRegisterSerializer,
     CompanyRegisterSerializer,
     LoginSerializer,
     CandidateSerializer,
-    CompanySerializer
+    CompanySerializer,
+    AdminCreateSerializer,
+    AdminSerializer
 )
 
 
@@ -23,6 +26,20 @@ class UserCreateView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class UserDetailAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+        return Response(user_data, status=status.HTTP_200_OK)
 
 
 class CandidateRegisterView(generics.CreateAPIView):
@@ -66,9 +83,15 @@ class LoginAPIView(APIView):
 
 
 class CandidateListAPIView(generics.ListAPIView):
-    queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Candidate.objects.all()
+        user_id = self.request.query_params.get('user', None)
+        if user_id is not None:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset
 
 
 class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -108,12 +131,42 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CompanyListAPIView(generics.ListAPIView):
-    queryset = Company.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Company.objects.all()
+        user_id = self.request.query_params.get('user', None)
+        if user_id is not None:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset
 
 
 class CompanyDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AdminCreateView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    queryset = Admin.objects.all()
+    serializer_class = AdminCreateSerializer
+
+
+class AdminListAPIView(generics.ListAPIView):
+    serializer_class = AdminSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Admin.objects.all()
+        user_id = self.request.query_params.get('user', None)
+        if user_id is not None:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset
+
+
+class AdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Admin.objects.all()
+    serializer_class = AdminSerializer
     permission_classes = [permissions.IsAuthenticated]

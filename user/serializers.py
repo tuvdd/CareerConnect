@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Candidate, Company
+from .models import User, Candidate, Company, Admin
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -46,6 +46,22 @@ class CompanyRegisterSerializer(serializers.Serializer):
         return company
 
 
+class AdminCreateSerializer(serializers.Serializer):
+    email = serializers.EmailField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    adminname = serializers.CharField()
+
+    def create(self, validated_data):
+        email = validated_data.pop("email")
+        password = validated_data.pop("password")
+
+        user = User.objects.create_user(
+            email=email, password=password, role="admin"
+        )
+        admin = Admin.objects.create(user=user, **validated_data)
+        return admin
+
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -73,4 +89,10 @@ class CandidateSerializer(serializers.ModelSerializer):
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
+        fields = '__all__'
+
+
+class AdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Admin
         fields = '__all__'
