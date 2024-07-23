@@ -1,8 +1,13 @@
-from django.shortcuts import render
+import os
 
-from rest_framework import generics, permissions, viewsets
+from django.contrib.auth import authenticate
+from rest_framework import generics, permissions, viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from config import settings
 from .models import User, Candidate, Company
 from .serializers import (
     UserSerializer,
@@ -12,11 +17,6 @@ from .serializers import (
     CandidateSerializer,
     CompanySerializer
 )
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-from django.urls import reverse
 
 
 class UserCreateView(generics.CreateAPIView):
@@ -65,31 +65,53 @@ class LoginAPIView(APIView):
             return Response({"error": "Invalid credentials"}, status=401)
 
 
-class ProtectedView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        return Response({"message": "This is a protected view!"})
-
-class CandidateViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    queryset = Candidate.objects.all()
-    serializer_class = CandidateSerializer
-
 class CandidateListAPIView(generics.ListAPIView):
     queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer
-    permission_classes = [permissions.IsAdminUser]
-    
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        image_files = request.FILES.getlist('image')
+        image_url = None
+
+        if image_files:
+            image = image_files[0]
+            ext = os.path.splitext(image.name)[1]
+            unique_filename = f"candidate_{instance.id}_image{ext}"
+
+            storage = settings.storage
+            path_on_cloud = f"candidates/{unique_filename}"
+
+            try:
+                storage.child(path_on_cloud).put(image)
+                image_url = storage.child(path_on_cloud).get_url(None)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        if image_url:
+            data['image'] = image_url
+
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+
 class CompanyListAPIView(generics.ListAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
+
 
 class CompanyDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Company.objects.all()

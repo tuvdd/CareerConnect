@@ -37,7 +37,7 @@ class User(AbstractBaseUser):
 
 class Candidate(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.CharField(max_length=200, default="sample.jpg")    
+    image = models.CharField(max_length=255, default="gs://careerconnect-5ad6c.appspot.com/candidates/sample.png")
     firstname = models.CharField(max_length=100)
     lastname = models.CharField(max_length=100)
     birthday = models.DateField()
@@ -49,7 +49,7 @@ class Candidate(models.Model):
 
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    logo = models.CharField(max_length=200, default="sample.jpg")    
+    logo = models.CharField(max_length=255, default="gs://careerconnect-5ad6c.appspot.com/companies/sample.png")
     name = models.CharField(max_length=200)
     address = models.CharField(max_length=200)
     field = models.CharField(max_length=200)

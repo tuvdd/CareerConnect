@@ -17,7 +17,6 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from user.views import (
@@ -25,12 +24,7 @@ from user.views import (
     CandidateRegisterView,
     CompanyRegisterView,
     LoginAPIView,
-    ProtectedView,
-    CandidateViewSet,
 )
-
-router = routers.DefaultRouter()
-router.register(r'candidate', CandidateViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -54,8 +48,6 @@ urlpatterns = [
                 path(
                     "token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
                 ),
-                path("protected/", ProtectedView.as_view(), name="protected"),
-                path("", include(router.urls)),
             ]
         ),
     ),
