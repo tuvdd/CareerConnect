@@ -1,6 +1,6 @@
 import React from "react";
 
-const JobCard = ({logo, title, company, salary, location, description, skills, timePosted}) => {
+const JobCard = ({logo, title, company, salary, location, description, timePosted}) => {
     return (
         <div className="border border-white shadow-md rounded-md p-4 bg-white my-2">
             <div className="flex items-center mb-4">
@@ -10,20 +10,7 @@ const JobCard = ({logo, title, company, salary, location, description, skills, t
                     <p className="text-gray-700">{company}</p>
                     <p className="text-red-500">{salary}</p>
                     <p className="text-gray-500">{location}</p>
-                    <div className="mb-4">
-                        <p className="text-gray-700">
-                            <ul className="list-disc ml-6">
-                                {description.map((desc, index) => (
-                                    <li key={index}>{desc}</li>
-                                ))}
-                            </ul>
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {skills.map((skill, index) => (
-                            <span key={index} className="bg-blue-100 text-blue-700 px-2 py-1 rounded">{skill}</span>
-                        ))}
-                    </div>
+                    <p className="text-gray-400 text-sm mt-4">{description}</p>
                     <p className="text-gray-400 text-sm mt-4">{timePosted}</p>
                 </div>
             </div>

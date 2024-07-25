@@ -1,5 +1,6 @@
 from django.db import models
 from user.models import Candidate, Company
+from django.utils import timezone
 
 
 class Job(models.Model):
@@ -9,6 +10,7 @@ class Job(models.Model):
     salary = models.BigIntegerField()
     status = models.CharField(max_length=100, default="Activated")
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    post_date = models.DateTimeField(default=timezone.now)
 
 
 class Application(models.Model):
