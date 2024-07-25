@@ -101,11 +101,16 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CandidateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
 
         image_files = request.FILES.getlist('image')
+        resume_files = request.FILES.getlist('resume')
+
+        data = request.data.copy()
         image_url = None
+        resume_url = None
 
         if image_files:
             image = image_files[0]
@@ -121,21 +126,7 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data.copy()
-        if image_url:
             data['image'] = image_url
-
-        serializer = self.get_serializer(instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
-    
-    def upload_resume(self, request, *args, **kwargs):
-        instance = self.get_object()
-
-        resume_files = request.FILES.getlist('resume')
-        resume_url = None
 
         if resume_files:
             resume = resume_files[0]
@@ -151,8 +142,6 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data.copy()
-        if resume_url:
             data['resume'] = resume_url
 
         serializer = self.get_serializer(instance, data=data, partial=True)
@@ -161,16 +150,20 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(serializer.data)
 
-        # if resume_url:
-        #     instance.resume = resume_url
-        #     instance.save()
-
-        #     return Response({'resume_url': resume_url}, status=status.HTTP_200_OK)
-        # else:
-        #     return Response({'error': 'Failed to upload resume'}, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ResumeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_default_download_path():
+        if os.name == 'nt':  # Nếu là Windows
+            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
+        elif os.name == 'posix':  # Nếu là Unix/Linux/MacOS
+            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
+        else:
+            download_path = os.getcwd()  # Sử dụng thư mục làm việc hiện tại làm mặc định
+
+        return download_path
+
     def get(self, request, *args, **kwargs):
         instance = Candidate.objects.get(pk=kwargs.get('pk'))
         resume_path = instance.resume  # Đường dẫn tới file resume trên Firebase Storage
@@ -178,15 +171,28 @@ class ResumeView(APIView):
         candidate_name = f"{instance.firstname}_{instance.lastname}"
         filename = f"{candidate_name}_resume.pdf"
 
+        # Lấy path download mặc định của system
+        download_path = ''
+        if os.name == 'nt':  # Nếu là Windows
+            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
+        elif os.name == 'posix':  # Nếu là Unix/Linux/MacOS
+            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
+        else:
+            download_path = os.getcwd()  # Sử dụng thư mục làm việc hiện tại làm mặc định
+
         # Tải file từ Firebase Storage và lưu vào file tạm thời
-        storage.child(resume_path).download("temp_resume.pdf")
 
-        with open("temp_resume.pdf", "rb") as file:
-            resume_file = file.read()
-            response = HttpResponse(resume_file, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="{filename}"'
-            return response
+            # Tải file từ Firebase Storage và lưu vào vị trí download mặc định
+        try:
+            storage.child(resume_path).download(download_path, filename)
 
+            with open(os.path.join(download_path, filename), "rb") as file:
+                resume_file = file.read()
+                response = HttpResponse(resume_file, content_type='application/pdf')
+                response['Content-Disposition'] = f'inline; filename="{filename}"'
+                return response
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 class CompanyListAPIView(generics.ListAPIView):
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
