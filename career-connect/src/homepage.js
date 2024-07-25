@@ -5,8 +5,10 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import JobCard from './components/JobCard';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import axiosInstance from './AxiosConfig';
+import LoadingSpinner from "./components/Loading";
 
 const Homepage = () => {
+    const [loading, setLoading] = useState(true);
     const [jobs, setJobs] = useState([]);
     const [displayedJobs, setDisplayedJobs] = useState([]);
     const [hasMore, setHasMore] = useState(true);
@@ -25,6 +27,8 @@ const Homepage = () => {
                 setHasMore(allJobs.length > pageSize);
             } catch (error) {
                 console.error('Error fetching jobs:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -46,6 +50,8 @@ const Homepage = () => {
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
     };
+
+    if (loading) return <LoadingSpinner/>;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20">

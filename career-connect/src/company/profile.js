@@ -8,6 +8,7 @@ import JobCard from "../components/JobCard";
 import AboutCompany from "./AboutCompany";
 import axiosInstance from "../AxiosConfig";
 import NotificationPopup from "../components/NotificationPopup";
+import LoadingSpinner from "../components/Loading";
 
 const CompanyProfile = () => {
     const jobData = {
@@ -56,7 +57,7 @@ const CompanyProfile = () => {
         setSelectedOption(option)
     }
 
-    if (loading) return <div className="text-center">Loading...</div>;
+    if (loading) return <LoadingSpinner/>;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20 ">
