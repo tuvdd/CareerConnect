@@ -147,6 +147,36 @@ class CompanyDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        image_files = request.FILES.getlist('logo')
+        image_url = None
+
+        if image_files:
+            image = image_files[0]
+            ext = os.path.splitext(image.name)[1]
+            unique_filename = f"company_{instance.id}_logo{ext}"
+
+            storage = settings.storage
+            path_on_cloud = f"companies/{unique_filename}"
+
+            try:
+                storage.child(path_on_cloud).put(image)
+                image_url = storage.child(path_on_cloud).get_url(None)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        if image_url:
+            data['logo'] = image_url
+
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
 
 class AdminCreateView(generics.CreateAPIView):
     permission_classes = [AllowAny]
