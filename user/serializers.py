@@ -90,6 +90,10 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = '__all__'
+        extra_kwargs = {
+            'user': {'required': False},
+            'active': {'required': False}
+        }
 
 
 class AdminSerializer(serializers.ModelSerializer):
