@@ -43,7 +43,7 @@ class Candidate(models.Model):
     birthday = models.DateField()
     address = models.CharField(max_length=200)
     gender = models.CharField(max_length=10)
-    resume = models.TextField()
+    resume = models.TextField(null=True, blank=True)
     active = models.CharField(max_length=100, default="Activated")
 
 

@@ -189,6 +189,29 @@ class ResumeView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ResumeDeleteAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        try:
+            instance = Candidate.objects.get(pk=pk)
+            resume_url = instance.resume
+
+            if resume_url:
+                try:
+                    instance.resume = ''
+                    instance.save()
+
+                    return Response({'status': 'Resume deleted and candidate updated'}, status=status.HTTP_200_OK)
+                except Exception as e:
+                    return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'error': 'No resume found to delete'}, status=status.HTTP_404_NOT_FOUND)
+        except Candidate.DoesNotExist:
+            return Response({'error': 'Candidate not found'}, status=status.HTTP_404_NOT_FOUND)
+
 class CompanyListAPIView(generics.ListAPIView):
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
