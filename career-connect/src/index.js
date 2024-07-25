@@ -4,7 +4,7 @@ import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom"; // Impo
 import './index.css';
 import Register from './user/register/Register'
 import CandidateHomepage from "./candidate/homepage";
-import CompanyHomepage from "./company/homepage";
+import CompanyProfile from "./company/profile";
 import AdministratorDashboard from "./admin/dashboard";
 import CandidateProfile from "./candidate/profile";
 
@@ -19,7 +19,7 @@ root.render(
             <Route path="/register" element={<Register />} />
             <Route path="/candidate" element={(isAuthenticated && role == 'candidate') ? <CandidateHomepage /> : <Navigate to="/register" replace />} />
             <Route path="/candidate-profile" element={(isAuthenticated && role == 'candidate') ? <CandidateProfile /> : <Navigate to="/register" replace />} />
-            <Route path="/company" element={(isAuthenticated && role == 'company') ? <CompanyHomepage /> : <Navigate to="/register" replace />} />
+            <Route path="/company" element={(isAuthenticated && role == 'company') ? <CompanyProfile /> : <Navigate to="/register" replace />} />
             <Route path="/admin" element={(isAuthenticated && role == 'admin') ? <AdministratorDashboard /> : <Navigate to="/register" replace />} />
         </Routes>
     </BrowserRouter>

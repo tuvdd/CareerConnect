@@ -44,12 +44,10 @@ function Dropdown() {
                     if (role === 'candidate') {
                         const candidateResponse = await axiosInstance.get(`api/candidates/?user=${userResponse.data.id}`);
                         setCandidate(candidateResponse.data[0]);
-                    }
-                    else if (role === 'company'){
+                    } else if (role === 'company') {
                         const companyResponse = await axiosInstance.get(`api/companies/?user=${userResponse.data.id}`);
                         setCompany(companyResponse.data[0]);
-                    }
-                    else {
+                    } else {
                         const adminResponse = await axiosInstance.get(`api/admin/?user=${userResponse.data.id}`);
                         setAdmin(adminResponse.data[0]);
                     }
@@ -66,9 +64,9 @@ function Dropdown() {
         <div className="relative flex flex-col items-center w-[340px] h-fit rounded-lg">
             <button
                 onClick={() => setIsOpen(prev => !prev)}
-                className="bg-white p-4 w-full flex items-center justify-between font-bold text-lg tracking-wider border-4 border-transparent active:border-gray-200 duration-300 hover:bg-gray-200 active:bg-gray-200 rounded-lg truncate"
+                className="bg-white p-4 w-full flex items-center justify-between font-bold text-lg tracking-wider border-4 border-transparent active:border-gray-200 duration-300 hover:bg-gray-200 active:bg-gray-200 rounded-lg"
             >
-                <span>
+                <span className="flex items-center truncate w-full">
                     {role === 'candidate' ? (
                         <>
                             <FontAwesomeIcon icon={faUser} className="mr-4"/>

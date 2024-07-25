@@ -60,19 +60,13 @@ const CandidateProfile = ({candidateId}) => {
 
     const validateFields = () => {
         const newErrors = {};
-        newErrors.firstname = '';
-        newErrors.lastname = '';
-        newErrors.birthday = '';
-        newErrors.gender = '';
-        newErrors.address = '';
-        newErrors.image = '';
 
         if (!candidate.firstname) newErrors.firstname = "Firstname is required";
         if (!candidate.lastname) newErrors.lastname = "Lastname is required";
         if (!candidate.birthday) newErrors.birthday = "Birthday is required";
         if (!candidate.gender) newErrors.gender = "Gender is required";
         if (!candidate.address) newErrors.address = "Address is required";
-        if (!newImage) newErrors.image = "Image is required";
+        if (!newImage && !candidate.image) newErrors.image = "Image is required";
 
         setErrors(newErrors);
 
@@ -241,20 +235,20 @@ const CandidateProfile = ({candidateId}) => {
                         ) : (
                             <>
                                 <h1 className="text-3xl font-bold mb-4 text-center">{`${candidate.firstname} ${candidate.lastname}`}</h1>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Email:</span> {user.email}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Birthday: </span>
                                     {new Date(candidate.birthday).toLocaleDateString('en-GB')}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Gender: </span> {candidate.gender}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Address: </span> {candidate.address}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span
                                         className="font-bold w-20 mr-2">Resume: </span> {candidate.resume ? candidate.resume : 'None'}
                                 </p>
