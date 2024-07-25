@@ -1,4 +1,7 @@
-from rest_framework import generics, permissions, filters
+from django.db.models import Count
+from rest_framework import generics, permissions, filters, status
+from rest_framework.response import Response
+
 from .models import Job, Application
 from .serializers import JobSerializer, ApplicationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -16,6 +19,7 @@ class JobFilter(django_filters.FilterSet):
         model = Job
         fields = ['title', 'location', 'salary', 'status', 'company__name']
 
+
 class ApplicationFilter(django_filters.FilterSet):
     date = django_filters.DateFromToRangeFilter(field_name='date')
     status = django_filters.CharFilter(field_name='status', lookup_expr='icontains')
@@ -27,10 +31,12 @@ class ApplicationFilter(django_filters.FilterSet):
         model = Application
         fields = ['date', 'status', 'candidate__firstname', 'candidate__lastname', 'job__title']
 
+
 class JobCreateAPIView(generics.CreateAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated]
+
 
 class JobListAPIView(generics.ListAPIView):
     queryset = Job.objects.all()
@@ -40,7 +46,6 @@ class JobListAPIView(generics.ListAPIView):
     # filterset_fields = ["title", "description"]
     filterset_class = JobFilter
     search_fields = ["title", "description", "company__name"]
-
 
 
 class JobDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -56,6 +61,18 @@ class JobListByCompanyAPIView(generics.ListAPIView):
     def get_queryset(self):
         company_id = self.kwargs['company_id']
         return Job.objects.filter(company_id=company_id)
+
+
+class TopJobsAPIView(generics.ListAPIView):
+    serializer_class = JobSerializer
+
+    def get_queryset(self):
+        return Job.objects.annotate(num_applications=Count('application')).order_by('-num_applications')[:3]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ApplicationCreateAPIView(generics.CreateAPIView):

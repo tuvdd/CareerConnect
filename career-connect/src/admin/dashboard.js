@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
-import { Bar } from 'react-chartjs-2';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-} from 'chart.js';
+import React, {useEffect, useState} from 'react';
+import {Bar} from 'react-chartjs-2';
+import {BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip,} from 'chart.js';
 import Navbar from '../components/navbar';
 import AdminButtons from "../components/AdminButtons";
+import axiosInstance from "../AxiosConfig";
+import LoadingSpinner from "../components/Loading";
 
-// Đăng ký các thành phần của Chart.js
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -24,21 +17,13 @@ ChartJS.register(
 
 const AdministratorDashboard = () => {
     const [selectedSection, setSelectedSection] = useState('dashboard');
-
-    const candidateCount = 2; // Dữ liệu giả, cần thay thế bằng dữ liệu thực tế
-    const jobCount = 2; // Dữ liệu giả, cần thay thế bằng dữ liệu thực tế
-    const companyCount = 2; // Dữ liệu giả, cần thay thế bằng dữ liệu thực tế
-
-    const topJobsData = {
-        labels: ['Backend Developer', 'Frontend Developer','job'], // Thay thế bằng dữ liệu thực tế
-        datasets: [
-            {
-                label: 'Số lượng ứng tuyển',
-                data: [10, 5,15], // Thay thế bằng dữ liệu thực tế
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-            },
-        ],
-    };
+    const [candidates, setCandidates] = useState([]);
+    const [companies, setCompanies] = useState([]);
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [notification, setNotification] = useState('');
+    const [topJobsData, setTopJobsData] = useState({ labels: [], datasets: [] });
 
     const topJobsOptions = {
         responsive: true,
@@ -48,7 +33,7 @@ const AdministratorDashboard = () => {
             },
             title: {
                 display: true,
-                text: 'Top 10 việc làm được ứng tuyển nhiều nhất',
+                text: 'Top 3 việc làm được ứng tuyển nhiều nhất',
             },
         },
         scales: {
@@ -69,9 +54,50 @@ const AdministratorDashboard = () => {
         },
     };
 
+    useEffect(() => {
+        const fetchSystemData = async () => {
+            try {
+                const [candidateResponse, companyResponse, jobResponse, topJobResponse] = await Promise.all([
+                    axiosInstance.get('api/candidates/'),
+                    axiosInstance.get('api/companies/'),
+                    axiosInstance.get('api/jobs/'),
+                    axiosInstance.get('api/top-jobs/'),
+                ]);
+
+                setCandidates(candidateResponse.data || []);
+                setCompanies(companyResponse.data|| []);
+                setJobs(jobResponse.data || []);
+                const topJobs = topJobResponse.data;
+
+                const labels = topJobs.map(job => job.title);
+                const data = topJobs.map(job => job.num_applications);
+
+                setTopJobsData({
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Số lượng ứng tuyển',
+                            data: data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        },
+                    ],
+                });
+            } catch (error) {
+                console.error("Error fetching system data", error);
+                setError('Error fetching data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSystemData();
+    }, []);
+
+    if (loading) return <LoadingSpinner/>;
+
     return (
-        <div className="bg-gray-100 min-h-screen w-screen pt-20">
-            <Navbar />
+        <div className="bg-gray-100 min-h-screen max-w-screen-2xl pt-20">
+            <Navbar/>
             <div className="container mx-auto py-4">
                 <h1 className="text-3xl font-bold mb-4">Administrator Dashboard</h1>
                 <div className="flex justify-center space-x-4 mb-6">
@@ -107,20 +133,20 @@ const AdministratorDashboard = () => {
                         <div className="grid grid-cols-3 gap-4 mb-8">
                             <div className="bg-white p-4 rounded shadow-md text-center">
                                 <h3 className="text-lg font-bold">Số lượng ứng viên</h3>
-                                <p className="text-2xl">{candidateCount}</p>
+                                <p className="text-2xl">{candidates.length}</p>
                             </div>
                             <div className="bg-white p-4 rounded shadow-md text-center">
                                 <h3 className="text-lg font-bold">Số lượng việc làm</h3>
-                                <p className="text-2xl">{jobCount}</p>
+                                <p className="text-2xl">{jobs.length}</p>
                             </div>
                             <div className="bg-white p-4 rounded shadow-md text-center">
                                 <h3 className="text-lg font-bold">Số lượng công ty</h3>
-                                <p className="text-2xl">{companyCount}</p>
+                                <p className="text-2xl">{companies.length}</p>
                             </div>
                         </div>
                         <div className="bg-white p-4 rounded shadow-md">
                             <h3 className="text-lg font-bold mb-4">Top 10 việc làm được ứng tuyển nhiều nhất</h3>
-                            <Bar data={topJobsData} options={topJobsOptions} />
+                            <Bar data={topJobsData} options={topJobsOptions}/>
                         </div>
                     </div>
                 )}
@@ -128,21 +154,21 @@ const AdministratorDashboard = () => {
                 {selectedSection === 'users' && (
                     <div>
                         <h2 className="text-2xl font-bold mb-4">Manage Users</h2>
-                        <UserList />
+                        <CandidateList candidates={candidates}/>
                     </div>
                 )}
 
                 {selectedSection === 'companies' && (
                     <div>
                         <h2 className="text-2xl font-bold mb-4">Manage Companies</h2>
-                        <CompanyList />
+                        <CompanyList companies={companies}/>
                     </div>
                 )}
 
                 {selectedSection === 'jobs' && (
                     <div>
                         <h2 className="text-2xl font-bold mb-4">Manage Jobs</h2>
-                        <JobManagement />
+                        <JobManagement jobs={jobs}/>
                     </div>
                 )}
             </div>
@@ -150,51 +176,46 @@ const AdministratorDashboard = () => {
     );
 };
 
-const UserList = () => {
-    const users = [
-        {
-            id: 1,
-            name: 'Quach Xuan Phuc 1',
-            email: 'john@example.com',
-            gender: 'Male',
-            birthday: '19/07/2002',
-            address: 'Hanoi'
-        },
-        {
-            id: 2,
-            name: 'Quach Xuan Phuc 2',
-            email: 'jane@example.com',
-            gender: 'Male',
-            birthday: '19/07/2002',
-            address: 'Hanoi'
-        },
-    ];
-
+const CandidateList = ({ candidates }) => {
     return (
         <div className="bg-white p-4 rounded shadow-md">
-            <h3 className="text-lg font-bold mb-4">User List</h3>
-            <p className="text-sm mb-4">{users.length} Candidates</p>
+            <h3 className="text-lg font-bold mb-4">Candidate List</h3>
+            <p className="text-sm mb-4">{candidates.length} Candidates</p>
             <table className="w-full text-left">
                 <thead>
                     <tr>
                         <th className="border-b py-2 px-4">ID</th>
                         <th className="border-b py-2 px-4">Name</th>
-                        <th className="border-b py-2 px-4">Email</th>
                         <th className="border-b py-2 px-4">Gender</th>
                         <th className="border-b py-2 px-4">Birthday</th>
                         <th className="border-b py-2 px-4">Address</th>
+                        <th className="border-b py-2 px-4">Resume</th>
+                        <th className="border-b py-2 px-4">Status</th>
+                        <th className="border-b py-2 px-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {users.map((user, index) => (
-                        <tr key={index}>
-                            <td className="border-b py-2 px-4">{user.id}</td>
-                            <td className="border-b py-2 px-4">{user.name}</td>
-                            <td className="border-b py-2 px-4">{user.email}</td>
-                            <td className="border-b py-2 px-4">{user.gender}</td>
-                            <td className="border-b py-2 px-4">{user.birthday}</td>
-                            <td className="border-b py-2 px-4">{user.address}</td>
-                            <td className="border-b py-2 px-4"><AdminButtons/></td>
+                    {candidates.map((candidate) => (
+                        <tr key={candidate.id}>
+                            <td className="border-b py-2 px-4">{candidate.id}</td>
+                            <td className="border-b py-2 px-4">{candidate.firstname} {candidate.lastname}</td>
+                            <td className="border-b py-2 px-4">{candidate.gender}</td>
+                            <td className="border-b py-2 px-4">{new Date(candidate.birthday).toLocaleDateString()}</td>
+                            <td className="border-b py-2 px-4">{candidate.address}</td>
+                            <td className="border-b py-2 px-4">
+                                {candidate.resume ? (
+                                    <a
+                                        href={candidate.resume}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-green-500 hover:text-green-700 underline"
+                                    >
+                                        View Resume
+                                    </a>
+                                ) : 'None'}
+                            </td>
+                            <td className="border-b py-2 px-4">{candidate.active}</td>
+                            <td className="border-b py-2 px-4"><AdminButtons /></td>
                         </tr>
                     ))}
                 </tbody>
@@ -203,28 +224,7 @@ const UserList = () => {
     );
 };
 
-const JobManagement = () => {
-    const jobs = [
-        {
-            id: 1,
-            title: 'Backend Developer',
-            company: 'Google',
-            field: 'Technology',
-            salary: '$120,000/year',
-            location: 'Mountain View, CA',
-            description: 'Develop and maintain web applications and services.'
-        },
-        {
-            id: 2,
-            title: 'Frontend Developer',
-            company: 'Facebook',
-            field: 'Technology',
-            salary: '$110,000/year',
-            location: 'Menlo Park, CA',
-            description: 'Implement UI components and enhance user experience.'
-        }
-    ];
-
+const JobManagement = ({ jobs = [] }) => {
     return (
         <div className="bg-white p-4 rounded shadow-md">
             <h3 className="text-lg font-bold mb-4">Job Management</h3>
@@ -235,23 +235,20 @@ const JobManagement = () => {
                         <th className="border-b py-2 px-4">ID</th>
                         <th className="border-b py-2 px-4">Title</th>
                         <th className="border-b py-2 px-4">Company</th>
-                        <th className="border-b py-2 px-4">Field</th>
                         <th className="border-b py-2 px-4">Salary</th>
                         <th className="border-b py-2 px-4">Location</th>
-                        <th className="border-b py-2 px-4">Description</th>
+                        <th className="border-b py-2 px-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {jobs.map((job, index) => (
-                        <tr key={index}>
+                    {jobs.map((job) => (
+                        <tr key={job.id}>
                             <td className="border-b py-2 px-4">{job.id}</td>
                             <td className="border-b py-2 px-4">{job.title}</td>
-                            <td className="border-b py-2 px-4">{job.company}</td>
-                            <td className="border-b py-2 px-4">{job.field}</td>
+                            <td className="border-b py-2 px-4">{job.company?.name || 'N/A'}</td>
                             <td className="border-b py-2 px-4">{job.salary}</td>
                             <td className="border-b py-2 px-4">{job.location}</td>
-                            <td className="border-b py-2 px-4">{job.description}</td>
-                            <td className="border-b py-2 px-4"><AdminButtons/></td>
+                            <td className="border-b py-2 px-4"><AdminButtons /></td>
                         </tr>
                     ))}
                 </tbody>
@@ -260,54 +257,32 @@ const JobManagement = () => {
     );
 };
 
-const CompanyList = () => {
-    const companies = [
-        {
-            id: 1,
-            name: 'Microsoft',
-            address: 'One Microsoft Way, Redmond, WA 98052, USA',
-            email: 'contact@microsoft.com',
-            phone: '+1 425-882-8080',
-            field: 'Technology',
-            description: 'Microsoft Corporation is an American multinational technology corporation which produces computer software, consumer electronics, personal computers, and related services.'
-        },
-        {
-            id: 2,
-            name: 'Google',
-            address: '1600 Amphitheatre Parkway, Mountain View, CA 94043, USA',
-            email: 'contact@google.com',
-            phone: '+1 650-253-0000',
-            field: 'Technology',
-            description: 'Google LLC is an American multinational technology company that specializes in Internet-related services and products, which include online advertising technologies, a search engine, cloud computing, software, and hardware.'
-        }
-    ];
-
+const CompanyList = ({ companies = [] }) => {
     return (
         <div className="bg-white p-4 rounded shadow-md">
             <h3 className="text-lg font-bold mb-4">Company List</h3>
             <p className="text-sm mb-4">{companies.length} Companies</p>
             <table className="w-full text-left">
                 <thead>
-                    <tr>
-                        <th className="border-b py-2 px-4">ID</th>
-                        <th className="border-b py-2 px-4">Name</th>
-                        <th className="border-b py-2 px-4">Address</th>
-                        <th className="border-b py-2 px-4">Email</th>
-                        <th className="border-b py-2 px-4">Phone</th>
-                        <th className="border-b py-2 px-4">Field</th>
-                        <th className="border-b py-2 px-4">Description</th>
-                    </tr>
+                <tr>
+                    <th className="border-b py-2 px-4">ID</th>
+                    <th className="border-b py-2 px-4">Name</th>
+                    <th className="border-b py-2 px-4">Address</th>
+                    <th className="border-b py-2 px-4">Email</th>
+                    <th className="border-b py-2 px-4">Phone</th>
+                    <th className="border-b py-2 px-4">Field</th>
+                    <th className="border-b py-2 px-4">Actions</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {companies.map((company, index) => (
-                        <tr key={index}>
+                    {companies.map((company) => (
+                        <tr key={company.id}>
                             <td className="border-b py-2 px-4">{company.id}</td>
                             <td className="border-b py-2 px-4">{company.name}</td>
                             <td className="border-b py-2 px-4">{company.address}</td>
-                            <td className="border-b py-2 px-4">{company.email}</td>
+                            <td className="border-b py-2 px-4">{company.user?.email || 'N/A'}</td>
                             <td className="border-b py-2 px-4">{company.phone}</td>
                             <td className="border-b py-2 px-4">{company.field}</td>
-                            <td className="border-b py-2 px-4">{company.description}</td>
                             <td className="border-b py-2 px-4"><AdminButtons/></td>
                         </tr>
                     ))}
