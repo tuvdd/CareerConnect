@@ -11,7 +11,7 @@ const Navbar = () => {
 
     const handleLogoClick = () => {
         if (isAuthenticated) {
-            navigate(`/${role}`);
+            navigate(`/home`);
         } else {
             navigate('/');
         }

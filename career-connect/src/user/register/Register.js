@@ -68,8 +68,7 @@ const Register = () => {
             localStorage.setItem('token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
             localStorage.setItem('role', response.data.redirect_url);
-            const redirect_url = '/' + response.data.redirect_url;
-            navigate(redirect_url)
+            navigate("/home");
         } catch (error) {
             console.error('Login failed:', error.response?.data || error.message);
             setNotification('Đăng nhập thất bại. Vui lòng kiểm tra thông tin và thử lại.');
