@@ -4,6 +4,7 @@ import NotificationPopup from "../components/NotificationPopup";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 import DOMPurify from "quill/formats/link";
+import LoadingSpinner from "../components/Loading";
 
 const AboutCompany = () => {
     const [user, setUser] = useState(null);
@@ -117,7 +118,7 @@ const AboutCompany = () => {
         setIsEditing(false);
     };
 
-    if (loading) return <div className="text-center">Loading...</div>;
+    if (loading) return <LoadingSpinner/>;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl">
