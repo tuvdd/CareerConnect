@@ -1,6 +1,7 @@
 import os
 
 from django.contrib.auth import authenticate
+from django.http import HttpResponse
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -9,6 +10,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from config import settings
+from config.settings import storage
 from .models import User, Candidate, Company, Admin
 from .serializers import (
     UserSerializer,
@@ -128,7 +130,62 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         self.perform_update(serializer)
 
         return Response(serializer.data)
+    
+    def upload_resume(self, request, *args, **kwargs):
+        instance = self.get_object()
 
+        resume_files = request.FILES.getlist('resume')
+        resume_url = None
+
+        if resume_files:
+            resume = resume_files[0]
+            ext = os.path.splitext(resume.name)[1]
+            unique_filename = f"candidate_{instance.id}_resume{ext}"
+
+            storage = settings.storage
+            path_on_cloud = f"candidates/{unique_filename}"
+
+            try:
+                storage.child(path_on_cloud).put(resume)
+                resume_url = storage.child(path_on_cloud).get_url(None)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data.copy()
+        if resume_url:
+            data['resume'] = resume_url
+
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+
+        # if resume_url:
+        #     instance.resume = resume_url
+        #     instance.save()
+
+        #     return Response({'resume_url': resume_url}, status=status.HTTP_200_OK)
+        # else:
+        #     return Response({'error': 'Failed to upload resume'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResumeView(APIView):
+    def get(self, request, *args, **kwargs):
+        instance = Candidate.objects.get(pk=kwargs.get('pk'))
+        resume_path = instance.resume  # Đường dẫn tới file resume trên Firebase Storage
+
+        candidate_name = f"{instance.firstname}_{instance.lastname}"
+        filename = f"{candidate_name}_resume.pdf"
+
+        # Tải file từ Firebase Storage và lưu vào file tạm thời
+        storage.child(resume_path).download("temp_resume.pdf")
+
+        with open("temp_resume.pdf", "rb") as file:
+            resume_file = file.read()
+            response = HttpResponse(resume_file, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+            return response
 
 class CompanyListAPIView(generics.ListAPIView):
     serializer_class = CompanySerializer
