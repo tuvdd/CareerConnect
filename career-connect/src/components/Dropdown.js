@@ -93,10 +93,19 @@ function Dropdown() {
             {isOpen && (
                 <div
                     className="absolute bg-white top-full left-0 flex flex-col items-start rounded-lg p-2 w-full shadow-lg">
-                    <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md" onClick={goToProfile}>
-                        <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
-                        Profile
-                    </button>
+                    {role === 'admin' ? (
+                        <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md"
+                                onClick={goToProfile}>
+                            <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
+                            Dashboard
+                        </button>
+                    ) : (
+                        <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md"
+                                onClick={goToProfile}>
+                            <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
+                            Profile
+                        </button>
+                    )}
                     <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md" onClick={handleLogout}>
                         <FontAwesomeIcon icon={faRightFromBracket} className="mr-4"/>
                         Log out
