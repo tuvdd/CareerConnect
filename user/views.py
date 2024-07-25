@@ -154,19 +154,9 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 class ResumeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_default_download_path():
-        if os.name == 'nt':  # Nếu là Windows
-            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
-        elif os.name == 'posix':  # Nếu là Unix/Linux/MacOS
-            download_path = os.path.join(os.path.expanduser('~'), 'Downloads')
-        else:
-            download_path = os.getcwd()  # Sử dụng thư mục làm việc hiện tại làm mặc định
-
-        return download_path
-
     def get(self, request, *args, **kwargs):
         instance = Candidate.objects.get(pk=kwargs.get('pk'))
-        resume_path = instance.resume  # Đường dẫn tới file resume trên Firebase Storage
+        resume_path = f'candidates/candidate_{instance.id}_resume.pdf'  # Đường dẫn tới file resume trên Firebase Storage
 
         candidate_name = f"{instance.firstname}_{instance.lastname}"
         filename = f"{candidate_name}_resume.pdf"
@@ -180,19 +170,25 @@ class ResumeView(APIView):
         else:
             download_path = os.getcwd()  # Sử dụng thư mục làm việc hiện tại làm mặc định
 
-        # Tải file từ Firebase Storage và lưu vào file tạm thời
-
-            # Tải file từ Firebase Storage và lưu vào vị trí download mặc định
         try:
-            storage.child(resume_path).download(download_path, filename)
 
-            with open(os.path.join(download_path, filename), "rb") as file:
-                resume_file = file.read()
-                response = HttpResponse(resume_file, content_type='application/pdf')
-                response['Content-Disposition'] = f'inline; filename="{filename}"'
-                return response
+            try:
+                destination_path = os.path.join(download_path, filename)
+                storage.child(resume_path).download(download_path, destination_path) 
+            except Exception:
+                current_work_dir = os.getcwd()
+                destination_path = os.path.join(current_work_dir, filename)
+                storage.child(resume_path).download(current_work_dir, destination_path) 
+
+            with open(destination_path, "rb") as file:
+                    resume_file = file.read()
+                    response = HttpResponse(resume_file, content_type='application/pdf')
+                    response['Content-Disposition'] = f'inline; filename="{filename}"'
+                    return response        
+            
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class CompanyListAPIView(generics.ListAPIView):
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
