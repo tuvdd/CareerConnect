@@ -3,54 +3,30 @@ import axiosInstance from "../AxiosConfig";
 import NotificationPopup from "../components/NotificationPopup";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
-import DOMPurify from "quill/formats/link";
-import LoadingSpinner from "../components/Loading";
 import CustomFileInput from "../components/CustomFileInput";
 
-const AboutCompany = () => {
-    const [user, setUser] = useState(null);
-    const [company, setCompany] = useState(null);
-    const [loading, setLoading] = useState(true);
+const AboutCompany = ({user, company}) => {
     const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [newLogo, setNewLogo] = useState(null);
-    const [originalCompany, setOriginalCompany] = useState(null);
+    const [newCompany, setNewCompany] = useState(null);
     const [errors, setErrors] = useState({});
     const [sanitizedHtml, setSanitizedHtml] = useState(null);
 
-
     useEffect(() => {
-        const fetchCompanyData = async () => {
-            try {
-                const userResponse = await axiosInstance.get('api/user/');
-                setUser(userResponse.data);
-
-                if (userResponse.data.id) {
-                    const companyResponse = await axiosInstance.get(`api/companies/?user=${userResponse.data.id}`);
-                    setCompany(companyResponse.data[0]);
-                    setSanitizedHtml(companyResponse.data[0].description);
-                    setOriginalCompany(companyResponse.data[0]);
-                }
-            } catch (error) {
-                console.error("Error fetching user or company details", error);
-                setError('Error fetching data');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCompanyData();
+        setNewCompany(company);
+        setSanitizedHtml(company.description);
     }, []);
 
     const handleInputChange = (e) => {
         const {name, value} = e.target;
-        setCompany({...company, [name]: value});
+        setNewCompany({...newCompany, [name]: value});
     };
 
     const handleDescriptionChange = (value) => {
-        setCompany({...company, description: value});
-        setSanitizedHtml(company.description);
+        setNewCompany({...newCompany, description: value});
+        setSanitizedHtml(newCompany.description);
     };
 
     const handleLogoChange = (e) => {
@@ -72,12 +48,12 @@ const AboutCompany = () => {
     const validateFields = () => {
         const newErrors = {};
 
-        if (!company.name) newErrors.name = "Name is required";
-        if (!company.address) newErrors.address = "Address is required";
-        if (!company.field) newErrors.field = "Field is required";
-        if (!company.phone) newErrors.phone = "Phone is required";
-        if (!company.description) newErrors.description = "Description is required";
-        if (!newLogo && !company.logo) newErrors.logo = "Logo is required";
+        if (!newCompany.name) newErrors.name = "Name is required";
+        if (!newCompany.address) newErrors.address = "Address is required";
+        if (!newCompany.field) newErrors.field = "Field is required";
+        if (!newCompany.phone) newErrors.phone = "Phone is required";
+        if (!newCompany.description) newErrors.description = "Description is required";
+        if (!newLogo && !newCompany.logo) newErrors.logo = "Logo is required";
 
         setErrors(newErrors);
 
@@ -94,13 +70,13 @@ const AboutCompany = () => {
             if (newLogo) {
                 formData.append('logo', newLogo);
             } else {
-                formData.append('logo', company.logo);
+                formData.append('logo', newCompany.logo);
             }
-            formData.append('name', company.name);
-            formData.append('address', company.address);
-            formData.append('field', company.field);
-            formData.append('phone', company.phone);
-            formData.append('description', company.description);
+            formData.append('name', newCompany.name);
+            formData.append('address', newCompany.address);
+            formData.append('field', newCompany.field);
+            formData.append('phone', newCompany.phone);
+            formData.append('description', newCompany.description);
 
             await axiosInstance.put(`api/companies/${company.id}/`, formData);
             setNotification('Information changed successfully');
@@ -114,12 +90,10 @@ const AboutCompany = () => {
     };
 
     const handleCancel = () => {
-        setCompany(originalCompany);
+        setNewCompany(company);
         setNewLogo(null);
         setIsEditing(false);
     };
-
-    if (loading) return <LoadingSpinner/>;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl">
@@ -127,8 +101,8 @@ const AboutCompany = () => {
                 <div className="w-4/5 bg-white shadow-lg rounded-lg flex space-x-4 p-6">
                     <div className="w-1/3 h-fit bg-login rounded-lg flex flex-col justify-center items-center p-6">
                         <img
-                            src={newLogo ? URL.createObjectURL(newLogo) : company.logo}
-                            alt={company.name}
+                            src={newLogo ? URL.createObjectURL(newLogo) : newCompany?.logo}
+                            alt={newCompany?.name}
                             className="w-40 h-40 rounded-full object-cover mb-4"
                         />
                         {isEditing && (
@@ -144,7 +118,7 @@ const AboutCompany = () => {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={company.name}
+                                        value={newCompany?.name}
                                         onChange={handleInputChange}
                                         className="mb-4 w-full p-2 border rounded-lg"
                                         required
@@ -168,7 +142,7 @@ const AboutCompany = () => {
                                     <input
                                         type="text"
                                         name="field"
-                                        value={company.field}
+                                        value={newCompany?.field}
                                         onChange={handleInputChange}
                                         className="mb-4 w-full p-2 border rounded-lg"
                                         required
@@ -181,7 +155,7 @@ const AboutCompany = () => {
                                     <input
                                         type="text"
                                         name="address"
-                                        value={company.address}
+                                        value={newCompany?.address}
                                         onChange={handleInputChange}
                                         className="text-gray-600 mb-2 flex h-10 items-center w-full p-2 border rounded-lg"
                                         required
@@ -194,7 +168,7 @@ const AboutCompany = () => {
                                     <input
                                         type="text"
                                         name="phone"
-                                        value={company.phone}
+                                        value={newCompany?.phone}
                                         onChange={handleInputChange}
                                         className="text-gray-600 mb-2 flex h-10 items-center w-full p-2 border rounded-lg"
                                         required
@@ -205,7 +179,7 @@ const AboutCompany = () => {
                                     <label htmlFor="description" className="block mb-1 font-bold">Description <span
                                         className="text-red-500">*</span></label>
                                     <ReactQuill
-                                        value={company.description}
+                                        value={newCompany?.description}
                                         onChange={handleDescriptionChange}
                                         modules={{
                                             toolbar: [
@@ -261,7 +235,7 @@ const AboutCompany = () => {
                                 <button
                                     onClick={() => {
                                         setIsEditing(true);
-                                        setOriginalCompany({...company});
+                                        setNewCompany({...company});
                                     }}
                                     className="w-16 mt-4 bg-green-500 text-white font-bold p-2 rounded"
                                 >
