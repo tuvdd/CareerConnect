@@ -20,7 +20,7 @@ const Homepage = () => {
     useEffect(() => {
         const fetchJobs = async () => {
             try {
-                const response = await axiosInstance.get(`api/jobs/`);
+                const response = await axiosInstance.get(`api/jobs/?status=Activated`);
                 const allJobs = response.data;
                 setJobs(allJobs);
                 setDisplayedJobs(allJobs.slice(0, pageSize));
