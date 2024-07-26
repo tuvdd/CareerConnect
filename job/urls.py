@@ -9,6 +9,7 @@ from .views import (
     ApplicationDetailAPIView,
     ApplicationListByJobAPIView,
     ApplicationListByCandidateAPIView,
+    ApplyForJobAPIView
 )
 
 urlpatterns = [
@@ -29,4 +30,5 @@ urlpatterns = [
             ApplicationListByCandidateAPIView.as_view(), 
             name='application-list-by-candidate'),
     path('api/applications/<int:pk>/', ApplicationDetailAPIView.as_view(), name='application-detail'),
+    path('api/jobs/<int:job_id>/apply/', ApplyForJobAPIView.as_view(), name='apply-for-job'),
 ]

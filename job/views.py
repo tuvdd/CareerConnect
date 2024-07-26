@@ -1,8 +1,10 @@
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
+from rest_framework.response import Response
 from .models import Job, Application
 from .serializers import JobSerializer, ApplicationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
+from django.utils import timezone
 
 
 class JobFilter(django_filters.FilterSet):
@@ -95,3 +97,31 @@ class ApplicationDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class ApplyForJobAPIView(generics.CreateAPIView):
+    serializer_class = ApplicationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        job_id = self.kwargs.get('job_id')
+        candidate = request.user.candidate
+
+        try:
+            job = Job.objects.get(pk=job_id)
+        except Job.DoesNotExist:
+            return Response({"detail": "Job not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        application_data = {
+            "candidate": candidate.id,
+            "job": job.id,
+            "status": "applied",
+            "date": timezone.now().date(),
+            "resume": request.data.get('resume')
+        }
+        serializer = self.get_serializer(data=application_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
