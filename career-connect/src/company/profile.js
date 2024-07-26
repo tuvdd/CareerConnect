@@ -1,86 +1,47 @@
 import React, {useEffect, useState} from "react";
 import Navbar from "../components/navbar";
-
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faLocationDot, faPhone, faEnvelope} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLocationDot, faPhone, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import CreateJobForm from "./CreateJobForm";
 import JobCard from "../components/JobCard";
 import AboutCompany from "./AboutCompany";
-import axiosInstance from "../AxiosConfig";
 import NotificationPopup from "../components/NotificationPopup";
 import LoadingSpinner from "../components/Loading";
+import useCompanyData from './CompanyData';
+import ViewJobs from "./ViewJobs";
 
 const CompanyProfile = () => {
-    const jobData = {
-        logo: '/path/to/logo.png',
-        title: 'Thực tập sinh Backend',
-        company: 'PTIT',
-        salary: 'Đăng nhập để xem mức lương',
-        location: 'Quận Hà Đông, Hà Nội',
-        description: [
-            'Lương tháng 13 (Trung bình 4-5 tháng lương cơ bản)',
-            'Được hưởng lương, thưởng và các cơ chế khuyến khích theo thỏa thuận và...',
-            'Được chi bổ sung thu nhập theo kết quả làm việc, vị trí công việc và theo q...',
-        ],
-        skills: ['Java', 'Python', '.NET', 'Fintech', 'Cloud'],
-        timePosted: 'Đăng 39 phút trước',
-    };
+    const { user, company, loading, error } = useCompanyData();
     const [selectedOption, setSelectedOption] = useState('aboutCompany');
-    const [user, setUser] = useState(null);
-    const [company, setCompany] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
 
-    useEffect(() => {
-        const fetchCompanyData = async () => {
-            try {
-                const userResponse = await axiosInstance.get('api/user/');
-                setUser(userResponse.data);
-
-                if (userResponse.data.id) {
-                    const companyResponse = await axiosInstance.get(`api/companies/?user=${userResponse.data.id}`);
-                    setCompany(companyResponse.data[0]);
-                }
-            } catch (error) {
-                console.error("Error fetching user or company details", error);
-                setError('Error fetching data');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCompanyData();
-    }, []);
-
     function handleOptionClick(option) {
-        setSelectedOption(option)
+        setSelectedOption(option);
     }
 
-    if (loading) return <LoadingSpinner/>;
+    if (loading) return <LoadingSpinner />;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20 ">
-            <Navbar/>
+            <Navbar />
             <div className="container bg-gray-100">
-                <div
-                    className="container w-full h-60 lg:bg-[url('https://c.topdevvn.com/v4/assets/images/bg-search.jpg')] flex flex-col items-center justify-center p-4">
+                <div className="container w-full h-60 lg:bg-[url('https://c.topdevvn.com/v4/assets/images/bg-search.jpg')] flex flex-col items-center justify-center p-4">
                     <div className="flex w-full justify-center items-center">
-                        <img src={company.logo} alt="Company Logo"
-                             className="w-40 h-40 mr-10 border border-gray-200 shadow-lg rounded-md"/>
+                        <img src={company?.logo} alt="Company Logo"
+                            className="w-40 h-40 mr-10 border border-gray-200 shadow-lg rounded-md" />
                         <div className="leading-9">
-                            <h1 className="text-2xl font-bold">{company.name}</h1>
+                            <h1 className="text-2xl font-bold">{company?.name}</h1>
                             <span className="flex items-center">
-                                <FontAwesomeIcon icon={faLocationDot} className="mr-2 w-4 h-4"/>
-                                <p>{company.address}</p>
+                                <FontAwesomeIcon icon={faLocationDot} className="mr-2 w-4 h-4" />
+                                <p>{company?.address}</p>
                             </span>
                             <span className="flex items-center">
-                                <FontAwesomeIcon icon={faPhone} className="mr-2 w-4 h-4"/>
-                                <p>{company.phone}</p>
+                                <FontAwesomeIcon icon={faPhone} className="mr-2 w-4 h-4" />
+                                <p>{company?.phone}</p>
                             </span>
                             <span className="flex items-center">
-                                <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4"/>
-                                <p>{user.email}</p>
+                                <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4" />
+                                <p>{user?.email}</p>
                             </span>
                         </div>
                     </div>
@@ -100,20 +61,20 @@ const CompanyProfile = () => {
                             onClick={() => handleOptionClick('viewJobs')}>Công việc đã tạo
                         </button>
                     </div>
-                    {selectedOption === 'aboutCompany' && (
-                        <AboutCompany/>
+                    {selectedOption === 'aboutCompany' && company && user && (
+                        <AboutCompany company={company} user={user}/>
                     )}
-                    {selectedOption === 'createJob' && (
-                        <CreateJobForm/>
+                    {selectedOption === 'createJob' && company && (
+                        <CreateJobForm company={company}/>
                     )}
-                    {selectedOption === 'viewJobs' && (
-                        <JobCard {...jobData} />
+                    {selectedOption === 'viewJobs' && company && (
+                        <ViewJobs company={company}/>
                     )}
                 </div>
             </div>
-            <NotificationPopup error={error} message={notification} onClose={() => setNotification('')}/>
+            <NotificationPopup error={error} message={notification} onClose={() => setNotification('')} />
         </div>
-    )
+    );
 }
 
 export default CompanyProfile;

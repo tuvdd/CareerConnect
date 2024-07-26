@@ -7,7 +7,7 @@ class Job(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     location = models.CharField(max_length=100)
-    salary = models.BigIntegerField()
+    salary = models.CharField(max_length=255, default="Thương lượng")
     status = models.CharField(max_length=100, default="Activated")
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     post_date = models.DateTimeField(default=timezone.now)

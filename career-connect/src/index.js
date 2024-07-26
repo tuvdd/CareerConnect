@@ -6,7 +6,8 @@ import Register from './user/register/Register'
 import CompanyProfile from "./company/profile";
 import AdministratorDashboard from "./admin/dashboard";
 import CandidateProfile from "./candidate/profile";
-import Homepage from "./homepage";
+import Homepage from "./user/homepage";
+import JobDetail from "./user/JobDetail";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const isAuthenticated = !!localStorage.getItem('token');
@@ -21,6 +22,7 @@ root.render(
             <Route path="/candidate-profile" element={(isAuthenticated && role === 'candidate') ? <CandidateProfile /> : <Navigate to="/register" replace />} />
             <Route path="/company-profile" element={(isAuthenticated && role === 'company') ? <CompanyProfile /> : <Navigate to="/register" replace />} />
             <Route path="/admin" element={(isAuthenticated && role === 'admin') ? <AdministratorDashboard /> : <Navigate to="/register" replace />} />
+            <Route path="/jobs/:id" element={<JobDetail />} />
         </Routes>
     </BrowserRouter>
 );
