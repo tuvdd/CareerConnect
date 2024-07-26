@@ -1,17 +1,17 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import axiosInstance from '../AxiosConfig';
 import LoadingSpinner from '../components/Loading';
-import {useParams} from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/navbar';
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faClock, faEnvelope, faLocationDot, faPhone} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock, faEnvelope, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import NotificationPopup from "../components/NotificationPopup";
 import ConfirmationPopup from "../components/ConfirmationPopup";
 
 const JobDetail = () => {
-    const {id} = useParams();
+    const { id } = useParams();
     const [job, setJob] = useState(null);
     const [company, setCompany] = useState(null);
     const [user, setUser] = useState(null);
@@ -39,8 +39,8 @@ const JobDetail = () => {
                 const userResponse = await axiosInstance.get('api/user/');
                 setUser(userResponse.data);
 
-                let userCompanyResponse = {data: {}};
-                let jobCompanyResponse = {data: {}};
+                let userCompanyResponse = { data: {} };
+                let jobCompanyResponse = { data: {} };
                 if (userResponse.data.id) {
                     userCompanyResponse = await axiosInstance.get(`api/companies/?user=${userResponse.data.id}`);
                 }
@@ -121,7 +121,7 @@ const JobDetail = () => {
 
     const handleCloseJob = async () => {
         try {
-            await axiosInstance.patch(`api/jobs/${id}/`, {status: 'Closed'});
+            await axiosInstance.patch(`api/jobs/${id}/`, { status: 'Closed' });
             setNotification('Job closed successfully');
             setError('false');
             window.location.reload();
@@ -145,14 +145,14 @@ const JobDetail = () => {
         setShowPopup(false);
     };
 
-    if (loading) return <LoadingSpinner/>;
+    if (loading) return <LoadingSpinner />;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20">
-            <Navbar/>
+            <Navbar />
             <div className="container bg-gray-100">
                 <div className="flex flex-col p-4 space-y-4 items-center">
-                    <CompanyInfo company={company} user={user}/>
+                    <CompanyInfo company={company} user={user} />
                     {isEditing ? (
                         <JobEditForm
                             formValues={formValues}
@@ -163,17 +163,25 @@ const JobDetail = () => {
                             onCancel={handleCancel}
                         />
                     ) : (
-                        <JobView job={job} role={role} isCompanyOwner={isCompanyOwner} onEdit={handleEdit}
-                                 onClose={confirmCloseJob}/>
+                        <JobView
+                            job={job}
+                            role={role}
+                            isCompanyOwner={isCompanyOwner}
+                            onEdit={handleEdit}
+                            onClose={confirmCloseJob}
+                            showPopup={showPopup}
+                            onConfirmPopup={handleConfirmPopup}
+                            onCancelPopup={handleCancelPopup}
+                        />
                     )}
-                    <NotificationPopup error={error} message={notification} onClose={() => setNotification('')}/>
+                    <NotificationPopup error={error} message={notification} onClose={() => setNotification('')} />
                 </div>
             </div>
         </div>
     );
 };
 
-const CompanyInfo = ({company, user}) => (
+const CompanyInfo = ({ company, user }) => (
     <div className="w-4/5 p-4 border border-gray-300 bg-white rounded-md shadow-lg">
         <div className="flex w-full justify-center items-center">
             <img
@@ -184,15 +192,15 @@ const CompanyInfo = ({company, user}) => (
             <div className="leading-9">
                 <h1 className="text-2xl font-bold">{company?.name}</h1>
                 <span className="flex items-center">
-                    <FontAwesomeIcon icon={faLocationDot} className="mr-2 w-4 h-4"/>
+                    <FontAwesomeIcon icon={faLocationDot} className="mr-2 w-4 h-4" />
                     <p>{company?.address}</p>
                 </span>
                 <span className="flex items-center">
-                    <FontAwesomeIcon icon={faPhone} className="mr-2 w-4 h-4"/>
+                    <FontAwesomeIcon icon={faPhone} className="mr-2 w-4 h-4" />
                     <p>{company?.phone}</p>
                 </span>
                 <span className="flex items-center">
-                    <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4"/>
+                    <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4" />
                     <p>{user?.email}</p>
                 </span>
             </div>
@@ -200,7 +208,7 @@ const CompanyInfo = ({company, user}) => (
     </div>
 );
 
-const JobView = ({job, role, isCompanyOwner, onEdit, onClose}) => (
+const JobView = ({ job, role, isCompanyOwner, onEdit, onClose, showPopup, onConfirmPopup, onCancelPopup }) => (
     <div className="w-4/5 p-10 bg-white border border-gray-300 rounded-md shadow-lg">
         <h1 className="text-3xl font-bold mb-4 text-center">Mô tả công việc</h1>
         <h1 className="text-3xl font-bold mb-4">{job?.title}</h1>
@@ -208,10 +216,10 @@ const JobView = ({job, role, isCompanyOwner, onEdit, onClose}) => (
         <p className="text-gray-700 text-md mb-2"><strong>Location:</strong> {job?.location}</p>
         <p className="text-gray-700 text-md mb-2"><strong>Description:</strong></p>
         <div className="text-gray-500 text-sm mb-4 custom-html-content"
-             dangerouslySetInnerHTML={{__html: job?.description}}/>
+             dangerouslySetInnerHTML={{ __html: job?.description }} />
         <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job?.status}</p>
         <p className="text-gray-400 text-sm">
-            <FontAwesomeIcon icon={faClock} className="mr-2 w-4 h-4"/>
+            <FontAwesomeIcon icon={faClock} className="mr-2 w-4 h-4" />
             {new Date(job?.post_date).toLocaleString('vi-VN', {
                 weekday: 'long',
                 year: 'numeric',
@@ -250,8 +258,8 @@ const JobView = ({job, role, isCompanyOwner, onEdit, onClose}) => (
             )}
             <ConfirmationPopup
                 show={showPopup}
-                onClose={handleCancel}
-                onConfirm={handleConfirm}
+                onClose={onCancelPopup}
+                onConfirm={onConfirmPopup}
                 title="Confirm Close Job"
                 message="Are you sure you want to close this job? This action cannot be undone."
             />
@@ -259,7 +267,7 @@ const JobView = ({job, role, isCompanyOwner, onEdit, onClose}) => (
     </div>
 );
 
-const JobEditForm = ({formValues, errors, onChange, onDescriptionChange, onSave, onCancel}) => (
+const JobEditForm = ({ formValues, errors, onChange, onDescriptionChange, onSave, onCancel }) => (
     <form className="w-4/5 p-6 bg-white border border-gray-300 rounded-md shadow-lg">
         <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2">Title</label>
