@@ -76,11 +76,12 @@ class LoginSerializer(serializers.Serializer):
 
 
 class CandidateSerializer(serializers.ModelSerializer):
+    resumes = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     class Meta:
         model = Candidate
         fields = '__all__'
         extra_kwargs = {
-            'resume': {'required': False},
+            'resumes': {'required': False},
             'user': {'required': False},
             'active': {'required': False}
         }

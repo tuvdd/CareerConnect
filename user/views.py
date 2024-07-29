@@ -1,4 +1,5 @@
 import os
+import requests
 
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
@@ -106,7 +107,7 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
 
         image_files = request.FILES.getlist('image')
-        resume_files = request.FILES.getlist('resume')
+        resume_files = request.FILES.getlist('resumes')
 
         data = request.data.copy()
         image_url = None
@@ -129,20 +130,22 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             data['image'] = image_url
 
         if resume_files:
-            resume = resume_files[0]
-            ext = os.path.splitext(resume.name)[1]
-            unique_filename = f"candidate_{instance.id}_resume{ext}"
+            resumes = []
+            for resume in resume_files:
+                unique_filename = resume.name  # Sử dụng tên file gốc làm unique_filename
+                path_on_cloud = f"candidates/{instance.id}/resumes/{unique_filename}"
 
-            storage = settings.storage
-            path_on_cloud = f"candidates/{unique_filename}"
+                storage = settings.storage
 
-            try:
-                storage.child(path_on_cloud).put(resume)
-                resume_url = storage.child(path_on_cloud).get_url(None)
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    storage.child(path_on_cloud).put(resume)
+                    resume_url = storage.child(path_on_cloud).get_url(None)
+                    resumes.append(resume_url)
+                except Exception as e:
+                    return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            data['resume'] = resume_url
+            merge_resume_list = list(set(resumes) | set(instance.resumes))
+            data.setlist('resumes', merge_resume_list)
 
         serializer = self.get_serializer(instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -151,15 +154,16 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data)
 
 
-class ResumeView(APIView):
+
+class ResumeDownloadAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         instance = Candidate.objects.get(pk=kwargs.get('pk'))
-        resume_path = f'candidates/candidate_{instance.id}_resume.pdf'  # Đường dẫn tới file resume trên Firebase Storage
+        resume_url = request.data.get('resume_url')
 
         candidate_name = f"{instance.firstname}_{instance.lastname}"
-        filename = f"{candidate_name}_resume.pdf"
+        download_filename = f"{candidate_name}_resume.pdf"
 
         # Lấy path download mặc định của system
         download_path = ''
@@ -171,20 +175,25 @@ class ResumeView(APIView):
             download_path = os.getcwd()  # Sử dụng thư mục làm việc hiện tại làm mặc định
 
         try:
-
+            respone_download = requests.get(resume_url)
             try:
-                destination_path = os.path.join(download_path, filename)
-                storage.child(resume_path).download(download_path, destination_path) 
+                destination_path = os.path.join(download_path, download_filename)
+                with open(destination_path, 'wb') as file:
+                    file.write(respone_download.content)
+
             except Exception:
                 current_work_dir = os.getcwd()
-                destination_path = os.path.join(current_work_dir, filename)
-                storage.child(resume_path).download(current_work_dir, destination_path) 
+                destination_path = os.path.join(current_work_dir, download_filename)
+                with open(destination_path, 'wb') as file:
+                    file.write(respone_download.content)
 
-            with open(destination_path, "rb") as file:
-                    resume_file = file.read()
-                    response = HttpResponse(resume_file, content_type='application/pdf')
-                    response['Content-Disposition'] = f'inline; filename="{filename}"'
-                    return response        
+
+            if os.path.exists(destination_path):
+                result_message = f"File downloaded successfully to: {destination_path}"
+            else:
+                result_message = "File download failed. Please try again" 
+            
+            return HttpResponse(result_message, content_type='text/plain')
             
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -195,22 +204,27 @@ class ResumeDeleteAPIView(APIView):
 
     def delete(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
+        resume_url = request.data.get('resume_url')
+
         try:
             instance = Candidate.objects.get(pk=pk)
-            resume_url = instance.resume
-
             if resume_url:
                 try:
-                    instance.resume = ''
+                    instance.resumes.remove(resume_url)
                     instance.save()
+                    response = requests.delete(resume_url)
+                    if str(response.status_code).startswith("20"):
+                        return Response({'status': 'Resume deleted and candidate updated'}, status=status.HTTP_200_OK)
+                    else:
+                        return Response({'status': 'Resume file not deleted and candidate updated'}, status=status.HTTP_400_BAD_REQUEST)
 
-                    return Response({'status': 'Resume deleted and candidate updated'}, status=status.HTTP_200_OK)
                 except Exception as e:
                     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'error': 'No resume found to delete'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'Missing resume_url parameter'}, status=status.HTTP_404_NOT_FOUND)
         except Candidate.DoesNotExist:
             return Response({'error': 'Candidate not found'}, status=status.HTTP_404_NOT_FOUND)
+        
 
 class CompanyListAPIView(generics.ListAPIView):
     serializer_class = CompanySerializer
