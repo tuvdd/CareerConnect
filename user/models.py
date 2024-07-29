@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.postgres.fields import ArrayField
 
 
 class UserManager(BaseUserManager):
@@ -43,7 +44,7 @@ class Candidate(models.Model):
     birthday = models.DateField()
     address = models.CharField(max_length=200)
     gender = models.CharField(max_length=10)
-    resume = models.TextField(null=True, blank=True)
+    resumes = ArrayField(models.TextField(), null=True, blank=True)  # Sử dụng ArrayField để lưu trữ danh sách các đường dẫn
     active = models.CharField(max_length=100, default="Activated")
 
 

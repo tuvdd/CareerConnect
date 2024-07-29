@@ -106,7 +106,7 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
 
         image_files = request.FILES.getlist('image')
-        resume_files = request.FILES.getlist('resume')
+        resume_files = request.FILES.getlist('resumes')
 
         data = request.data.copy()
         image_url = None
@@ -129,20 +129,22 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             data['image'] = image_url
 
         if resume_files:
-            resume = resume_files[0]
-            ext = os.path.splitext(resume.name)[1]
-            unique_filename = f"candidate_{instance.id}_resume{ext}"
+            resumes = []
+            for resume in resume_files:
+                unique_filename = resume.name  # Sử dụng tên file gốc làm unique_filename
+                path_on_cloud = f"candidates/{instance.id}/resumes/{unique_filename}"
 
-            storage = settings.storage
-            path_on_cloud = f"candidates/{unique_filename}"
+                storage = settings.storage
 
-            try:
-                storage.child(path_on_cloud).put(resume)
-                resume_url = storage.child(path_on_cloud).get_url(None)
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                try:
+                    storage.child(path_on_cloud).put(resume)
+                    resume_url = storage.child(path_on_cloud).get_url(None)
+                    resumes.append(resume_url)
+                except Exception as e:
+                    return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            data['resume'] = resume_url
+            merge_resume_list = list(set(resumes) | set(instance.resumes))
+            data.setlist('resumes', merge_resume_list)
 
         serializer = self.get_serializer(instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
