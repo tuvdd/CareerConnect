@@ -7,7 +7,7 @@ import CandidateHomepage from "./candidate/homepage";
 import CompanyHomepage from "./company/homepage";
 import AdministratorDashboard from "./admin/dashboard";
 import CandidateProfile from "./candidate/profile";
-
+import AppliedJob from "./candidate/listofappliedjobs";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const isAuthenticated = !!localStorage.getItem('token');
 const role = localStorage.getItem('role');
@@ -16,6 +16,7 @@ root.render(
         <Routes>
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/" element={<Navigate to="/register" replace />} />
+            <Route path="/list-of-applied-jobs" element={<AppliedJob/>}></Route>
             <Route path="/register" element={<Register />} />
             <Route path="/candidate" element={(isAuthenticated && role == 'candidate') ? <CandidateHomepage /> : <Navigate to="/register" replace />} />
             <Route path="/candidate-profile" element={(isAuthenticated && role == 'candidate') ? <CandidateProfile /> : <Navigate to="/register" replace />} />
