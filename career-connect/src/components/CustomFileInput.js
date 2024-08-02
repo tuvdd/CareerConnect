@@ -17,7 +17,7 @@ const CustomFileInput = ({onChange, text, accept}) => {
     };
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col">
             <input
                 type="file"
                 ref={fileInputRef}

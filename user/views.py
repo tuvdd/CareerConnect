@@ -1,17 +1,16 @@
 import os
-import requests
 
+import requests
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
-from rest_framework import generics, permissions, viewsets, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import generics, permissions, status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from config import settings
-from config.settings import storage
 from .models import User, Candidate, Company, Admin
 from .serializers import (
     UserSerializer,
@@ -102,16 +101,14 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CandidateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
 
         image_files = request.FILES.getlist('image')
-        resume_files = request.FILES.getlist('resumes')
+        resume_files = request.FILES.getlist('resume')
 
-        data = request.data.copy()
         image_url = None
-        resume_url = None
+        resumes = list(instance.resumes)
 
         if image_files:
             image = image_files[0]
@@ -127,32 +124,33 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            data['image'] = image_url
-
         if resume_files:
-            resumes = []
+            new_resume_urls = []
             for resume in resume_files:
-                unique_filename = resume.name  # Sử dụng tên file gốc làm unique_filename
+                unique_filename = resume.name
                 path_on_cloud = f"candidates/{instance.id}/resumes/{unique_filename}"
 
-                storage = settings.storage
-
                 try:
+                    storage = settings.storage
                     storage.child(path_on_cloud).put(resume)
                     resume_url = storage.child(path_on_cloud).get_url(None)
-                    resumes.append(resume_url)
+                    new_resume_urls.append(resume_url)
                 except Exception as e:
                     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            merge_resume_list = list(set(resumes) | set(instance.resumes))
-            data.setlist('resumes', merge_resume_list)
+            resumes.extend(new_resume_urls)
+
+        data = {
+            'image': image_url if image_url else instance.image,
+            'resumes': resumes,
+            **{key: value for key, value in request.data.items() if key not in ['image', 'resume']}
+        }
 
         serializer = self.get_serializer(instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
         return Response(serializer.data)
-
 
 
 class ResumeDownloadAPIView(APIView):
@@ -187,14 +185,13 @@ class ResumeDownloadAPIView(APIView):
                 with open(destination_path, 'wb') as file:
                     file.write(respone_download.content)
 
-
             if os.path.exists(destination_path):
                 result_message = f"File downloaded successfully to: {destination_path}"
             else:
-                result_message = "File download failed. Please try again" 
-            
+                result_message = "File download failed. Please try again"
+
             return HttpResponse(result_message, content_type='text/plain')
-            
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -216,7 +213,8 @@ class ResumeDeleteAPIView(APIView):
                     if str(response.status_code).startswith("20"):
                         return Response({'status': 'Resume deleted and candidate updated'}, status=status.HTTP_200_OK)
                     else:
-                        return Response({'status': 'Resume file not deleted and candidate updated'}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({'status': 'Resume file not deleted and candidate updated'},
+                                        status=status.HTTP_400_BAD_REQUEST)
 
                 except Exception as e:
                     return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -224,7 +222,7 @@ class ResumeDeleteAPIView(APIView):
                 return Response({'error': 'Missing resume_url parameter'}, status=status.HTTP_404_NOT_FOUND)
         except Candidate.DoesNotExist:
             return Response({'error': 'Candidate not found'}, status=status.HTTP_404_NOT_FOUND)
-        
+
 
 class CompanyListAPIView(generics.ListAPIView):
     serializer_class = CompanySerializer
