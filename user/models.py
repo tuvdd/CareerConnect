@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.postgres.fields import ArrayField
 
 
 class UserManager(BaseUserManager):
@@ -37,19 +38,19 @@ class User(AbstractBaseUser):
 
 class Candidate(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.CharField(max_length=255, default="gs://careerconnect-5ad6c.appspot.com/candidates/sample.png")
+    image = models.CharField(max_length=255, default="https://firebasestorage.googleapis.com/v0/b/careerconnect-5ad6c.appspot.com/o/candidates%2Fsample.png?alt=media")
     firstname = models.CharField(max_length=100)
     lastname = models.CharField(max_length=100)
     birthday = models.DateField()
     address = models.CharField(max_length=200)
     gender = models.CharField(max_length=10)
-    resume = models.TextField()
+    resumes = ArrayField(models.TextField(), null=True, blank=True)  # Sử dụng ArrayField để lưu trữ danh sách các đường dẫn
     active = models.CharField(max_length=100, default="Activated")
 
 
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    logo = models.CharField(max_length=255, default="gs://careerconnect-5ad6c.appspot.com/companies/sample.png")
+    logo = models.CharField(max_length=255, default="https://firebasestorage.googleapis.com/v0/b/careerconnect-5ad6c.appspot.com/o/companies%2Fsample.png?alt=media")
     name = models.CharField(max_length=200)
     address = models.CharField(max_length=200)
     field = models.CharField(max_length=200)

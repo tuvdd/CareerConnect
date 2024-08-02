@@ -1,7 +1,9 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import axiosInstance from "../AxiosConfig";
 import Navbar from "../components/navbar";
 import NotificationPopup from "../components/NotificationPopup";
+import LoadingSpinner from "../components/Loading";
+import CustomFileInput from "../components/CustomFileInput";
 
 const CandidateProfile = ({candidateId}) => {
     const [user, setUser] = useState(null);
@@ -13,6 +15,7 @@ const CandidateProfile = ({candidateId}) => {
     const [newImage, setNewImage] = useState(null);
     const [originalCandidate, setOriginalCandidate] = useState(null);
     const [errors, setErrors] = useState({});
+    const [newResume, setNewResume] = useState({});
 
     useEffect(() => {
         const fetchCandidateData = async () => {
@@ -57,22 +60,32 @@ const CandidateProfile = ({candidateId}) => {
         }
     };
 
+    const handleResumeChange = (e) => {
+        const file = e.target.files && e.target.files[0];
+
+        if (file) {
+            const allowedType = 'application/pdf';
+
+            if (file.type === allowedType) {
+                setNewResume(file);
+                setErrors(prevErrors => ({...prevErrors, resume: ''}));
+            } else {
+                setNewResume(null);
+                setErrors(prevErrors => ({...prevErrors, resume: 'Chỉ chấp nhận file với định dạng PDF.'}));
+            }
+        }
+    };
+
 
     const validateFields = () => {
         const newErrors = {};
-        newErrors.firstname = '';
-        newErrors.lastname = '';
-        newErrors.birthday = '';
-        newErrors.gender = '';
-        newErrors.address = '';
-        newErrors.image = '';
 
         if (!candidate.firstname) newErrors.firstname = "Firstname is required";
         if (!candidate.lastname) newErrors.lastname = "Lastname is required";
         if (!candidate.birthday) newErrors.birthday = "Birthday is required";
         if (!candidate.gender) newErrors.gender = "Gender is required";
         if (!candidate.address) newErrors.address = "Address is required";
-        if (!newImage) newErrors.image = "Image is required";
+        if (!newImage && !candidate.image) newErrors.image = "Image is required";
 
         setErrors(newErrors);
 
@@ -91,13 +104,19 @@ const CandidateProfile = ({candidateId}) => {
             } else {
                 formData.append('image', candidate.image);
             }
+            if (newResume) {
+                formData.append('resume', newResume);
+            } else {
+                formData.append('resume', candidate.resume);
+            }
             formData.append('firstname', candidate.firstname);
             formData.append('lastname', candidate.lastname);
             formData.append('birthday', candidate.birthday);
             formData.append('address', candidate.address);
             formData.append('gender', candidate.gender);
 
-            await axiosInstance.put(`api/candidates/${candidate.id}/`, formData);
+            const response = await axiosInstance.put(`api/candidates/${candidate.id}/`, formData);
+            setCandidate(response.data);
             setNotification('Information changed successfully');
             setError('false');
             setIsEditing(false);
@@ -114,7 +133,24 @@ const CandidateProfile = ({candidateId}) => {
         setIsEditing(false);
     };
 
-    if (loading) return <div className="text-center">Loading...</div>;
+    const handleDeleteResume = async () => {
+        try {
+            await axiosInstance.delete(`api/candidates/${candidate.id}/delete_resume/`);
+
+            const response = await axiosInstance.get(`api/candidates/${candidate.id}/`);
+            setCandidate(response.data);
+
+            setNotification('Resume deleted successfully');
+            setError('false');
+        } catch (error) {
+            console.error("Error deleting resume", error);
+            setNotification('Error deleting resume');
+            setError('true');
+        }
+    }
+
+
+    if (loading) return <LoadingSpinner/>;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20">
@@ -219,9 +255,25 @@ const CandidateProfile = ({candidateId}) => {
                                     />
                                     {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
                                 </div>
-                                <div className="flex items-center space-x-4">
+                                <div>
                                     <label htmlFor="resume" className="block mb-1 font-bold">Resume</label>
-                                    <CustomFileInput onChange={handleInputChange} text="Chọn Resune" accept="application/pdf"/>
+                                    <div className="flex items-center space-x-4">
+                                        {candidate.resume ? (
+                                            <a
+                                                className="py-2 px-4 mt-2 bg-green-500 text-white font-bold rounded hover:bg-green-700 transition duration-300 ease-in-out"
+                                                href={candidate.resume}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Xem Resume
+                                            </a>) : (<p>None</p>)}
+                                        <CustomFileInput onChange={handleResumeChange} text="Chọn Resune"
+                                                         accept="application/pdf"/>
+                                        <button onClick={handleDeleteResume}
+                                                className="w-40 bg-red-500 text-white font-bold p-2 rounded mt-2">Xóa
+                                            Resume
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="flex justify-start space-x-4 mt-4">
                                     <button
@@ -241,22 +293,30 @@ const CandidateProfile = ({candidateId}) => {
                         ) : (
                             <>
                                 <h1 className="text-3xl font-bold mb-4 text-center">{`${candidate.firstname} ${candidate.lastname}`}</h1>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Email:</span> {user.email}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Birthday: </span>
                                     {new Date(candidate.birthday).toLocaleDateString('en-GB')}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Gender: </span> {candidate.gender}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Address: </span> {candidate.address}
                                 </p>
-                                <p className="text-gray-600 mb-2 flex h-10 items-center">
+                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span
-                                        className="font-bold w-20 mr-2">Resume: </span> {candidate.resume ? candidate.resume : 'None'}
+                                        className="font-bold w-20 mr-2">Resume: </span> {candidate.resume ? (
+                                    <a
+                                        className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-700 transition duration-300 ease-in-out"
+                                        href={candidate.resume}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Xem Resume
+                                    </a>) : 'None'}
                                 </p>
                                 <button
                                     onClick={() => {
@@ -273,45 +333,6 @@ const CandidateProfile = ({candidateId}) => {
                 </div>
             </div>
             <NotificationPopup error={error} message={notification} onClose={() => setNotification('')}/>
-        </div>
-    );
-};
-
-const CustomFileInput = ({ onChange, text, accept }) => {
-    const [fileName, setFileName] = useState('');
-    const fileInputRef = useRef(null);
-
-    const handleClick = () => {
-        fileInputRef.current.click();
-    };
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFileName(file.name);
-            onChange(e);
-        }
-    };
-
-    return (
-        <div className="flex flex-col items-center">
-            <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                style={{ display: 'none' }}
-                accept={accept}
-            />
-            <button
-                type="button"
-                onClick={handleClick}
-                className="w-40 bg-green-500 text-white font-bold p-2 rounded mt-2"
-            >
-                {text}
-            </button>
-            {fileName && (
-                <p className="mt-2 text-gray-700">Selected file: {fileName}</p>
-            )}
         </div>
     );
 };

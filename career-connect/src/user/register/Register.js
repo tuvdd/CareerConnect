@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
 import NotificationPopup from "../../components/NotificationPopup";
+import LoadingSpinner from "../../components/Loading";
 
 const Register = () => {
     const navigate = useNavigate();
@@ -35,6 +36,7 @@ const Register = () => {
     const [selectedOption, setSelectedOption] = useState('candidate');
     const [notification, setNotification] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleLoginChange = (e) => {
         const {name, value} = e.target;
@@ -62,23 +64,26 @@ const Register = () => {
 
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
             const response = await axios.post('http://127.0.0.1:8000/api/login/', loginForm);
             console.log('Login successful:', response.data);
             localStorage.setItem('token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
             localStorage.setItem('role', response.data.redirect_url);
-            const redirect_url = '/' + response.data.redirect_url;
-            navigate(redirect_url)
+            navigate("/home");
         } catch (error) {
             console.error('Login failed:', error.response?.data || error.message);
             setNotification('Đăng nhập thất bại. Vui lòng kiểm tra thông tin và thử lại.');
             setError('true');
+        } finally {
+            setLoading(false)
         }
     };
 
     const handleRegisterSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         let apiUrl;
         let registerForm;
         if (selectedOption === 'candidate') {
@@ -112,6 +117,8 @@ const Register = () => {
             console.error('Registration failed:', error.response?.data || error.message);
             setNotification('Đăng ký thất bại. Vui lòng kiểm tra thông tin và thử lại.');
             setError('true');
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -144,6 +151,7 @@ const Register = () => {
 
     return (
         <div>
+            {loading && <LoadingSpinner />}
             <div className="flex justify-center">
                 {/* Đăng nhập */}
                 <div className="w-1/2 h-auto p-8 bg-login flex flex-col justify-center">

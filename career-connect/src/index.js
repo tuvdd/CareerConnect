@@ -3,11 +3,13 @@ import ReactDOM from "react-dom/client";
 import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom"; // Import BrowserRouter và Route
 import './index.css';
 import Register from './user/register/Register'
-import CandidateHomepage from "./candidate/homepage";
-import CompanyHomepage from "./company/homepage";
+import CompanyProfile from "./company/profile";
 import AdministratorDashboard from "./admin/dashboard";
 import CandidateProfile from "./candidate/profile";
 import AppliedJob from "./candidate/listofappliedjobs";
+import Homepage from "./user/homepage";
+import JobDetail from "./user/JobDetail";
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const isAuthenticated = !!localStorage.getItem('token');
 const role = localStorage.getItem('role');
@@ -18,10 +20,11 @@ root.render(
             <Route path="/" element={<Navigate to="/register" replace />} />
             <Route path="/list-of-applied-jobs" element={<AppliedJob/>}></Route>
             <Route path="/register" element={<Register />} />
-            <Route path="/candidate" element={(isAuthenticated && role == 'candidate') ? <CandidateHomepage /> : <Navigate to="/register" replace />} />
-            <Route path="/candidate-profile" element={(isAuthenticated && role == 'candidate') ? <CandidateProfile /> : <Navigate to="/register" replace />} />
-            <Route path="/company" element={(isAuthenticated && role == 'company') ? <CompanyHomepage /> : <Navigate to="/register" replace />} />
-            <Route path="/admin" element={(isAuthenticated && role == 'admin') ? <AdministratorDashboard /> : <Navigate to="/register" replace />} />
+            <Route path="/home" element={(isAuthenticated) ? <Homepage /> : <Navigate to="/register" replace />} />
+            <Route path="/candidate-profile" element={(isAuthenticated && role === 'candidate') ? <CandidateProfile /> : <Navigate to="/register" replace />} />
+            <Route path="/company-profile" element={(isAuthenticated && role === 'company') ? <CompanyProfile /> : <Navigate to="/register" replace />} />
+            <Route path="/admin" element={(isAuthenticated && role === 'admin') ? <AdministratorDashboard /> : <Navigate to="/register" replace />} />
+            <Route path="/jobs/:id" element={<JobDetail />} />
         </Routes>
     </BrowserRouter>
 );

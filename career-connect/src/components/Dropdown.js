@@ -31,6 +31,10 @@ function Dropdown() {
     const goToProfile = () => {
         if (role === 'candidate') {
             navigate('/candidate-profile');
+        } else if (role === 'company') {
+            navigate('/company-profile');
+        } else {
+            navigate('/admin');
         }
     };
 
@@ -44,12 +48,10 @@ function Dropdown() {
                     if (role === 'candidate') {
                         const candidateResponse = await axiosInstance.get(`api/candidates/?user=${userResponse.data.id}`);
                         setCandidate(candidateResponse.data[0]);
-                    }
-                    else if (role === 'company'){
+                    } else if (role === 'company') {
                         const companyResponse = await axiosInstance.get(`api/companies/?user=${userResponse.data.id}`);
                         setCompany(companyResponse.data[0]);
-                    }
-                    else {
+                    } else {
                         const adminResponse = await axiosInstance.get(`api/admin/?user=${userResponse.data.id}`);
                         setAdmin(adminResponse.data[0]);
                     }
@@ -66,9 +68,9 @@ function Dropdown() {
         <div className="relative flex flex-col items-center w-[340px] h-fit rounded-lg">
             <button
                 onClick={() => setIsOpen(prev => !prev)}
-                className="bg-white p-4 w-full flex items-center justify-between font-bold text-lg tracking-wider border-4 border-transparent active:border-gray-200 duration-300 hover:bg-gray-200 active:bg-gray-200 rounded-lg truncate"
+                className="bg-white p-4 w-full flex items-center justify-between font-bold text-lg tracking-wider border-4 border-transparent active:border-gray-200 duration-300 hover:bg-gray-200 active:bg-gray-200 rounded-lg"
             >
-                <span>
+                <span className="flex items-center truncate w-full">
                     {role === 'candidate' ? (
                         <>
                             <FontAwesomeIcon icon={faUser} className="mr-4"/>
@@ -91,10 +93,19 @@ function Dropdown() {
             {isOpen && (
                 <div
                     className="absolute bg-white top-full left-0 flex flex-col items-start rounded-lg p-2 w-full shadow-lg">
-                    <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md" onClick={goToProfile}>
-                        <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
-                        Profile
-                    </button>
+                    {role === 'admin' ? (
+                        <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md"
+                                onClick={goToProfile}>
+                            <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
+                            Dashboard
+                        </button>
+                    ) : (
+                        <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md"
+                                onClick={goToProfile}>
+                            <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
+                            Profile
+                        </button>
+                    )}
                     <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md" onClick={handleLogout}>
                         <FontAwesomeIcon icon={faRightFromBracket} className="mr-4"/>
                         Log out
