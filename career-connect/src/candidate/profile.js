@@ -16,6 +16,7 @@ const CandidateProfile = ({candidateId}) => {
     const [originalCandidate, setOriginalCandidate] = useState(null);
     const [errors, setErrors] = useState({});
     const [newResume, setNewResume] = useState({});
+    const [selectedResume, setSelectedResume] = useState('');
 
     useEffect(() => {
         const fetchCandidateData = async () => {
@@ -27,6 +28,10 @@ const CandidateProfile = ({candidateId}) => {
                     const candidateResponse = await axiosInstance.get(`api/candidates/?user=${userResponse.data.id}`);
                     setCandidate(candidateResponse.data[0]);
                     setOriginalCandidate(candidateResponse.data[0]);
+
+                    if (candidateResponse.data[0].resumes && candidateResponse.data[0].resumes.length > 0) {
+                        setSelectedResume(candidateResponse.data[0].resumes[0]);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching user or candidate details", error);
@@ -106,8 +111,6 @@ const CandidateProfile = ({candidateId}) => {
             }
             if (newResume) {
                 formData.append('resume', newResume);
-            } else {
-                formData.append('resume', candidate.resume);
             }
             formData.append('firstname', candidate.firstname);
             formData.append('lastname', candidate.lastname);
@@ -117,6 +120,7 @@ const CandidateProfile = ({candidateId}) => {
 
             const response = await axiosInstance.put(`api/candidates/${candidate.id}/`, formData);
             setCandidate(response.data);
+            setSelectedResume(response.data.resumes[0]);
             setNotification('Information changed successfully');
             setError('false');
             setIsEditing(false);
@@ -133,9 +137,12 @@ const CandidateProfile = ({candidateId}) => {
         setIsEditing(false);
     };
 
-    const handleDeleteResume = async () => {
+    const handleDeleteResume = async (resumeUrl) => {
         try {
-            await axiosInstance.delete(`api/candidates/${candidate.id}/delete_resume/`);
+            const responseDelete = await axiosInstance.delete(`api/candidates/${candidate.id}/delete_resume/`, {
+                data: {resume_url: resumeUrl}
+            });
+            console.log(responseDelete.data.status);
 
             const response = await axiosInstance.get(`api/candidates/${candidate.id}/`);
             setCandidate(response.data);
@@ -256,24 +263,47 @@ const CandidateProfile = ({candidateId}) => {
                                     {errors.address && <p className="text-red-500 text-sm">{errors.address}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="resume" className="block mb-1 font-bold">Resume</label>
+                                    <label htmlFor="resumes" className="block mb-1 font-bold">Resume</label>
                                     <div className="flex items-center space-x-4">
-                                        {candidate.resume ? (
-                                            <a
-                                                className="py-2 px-4 mt-2 bg-green-500 text-white font-bold rounded hover:bg-green-700 transition duration-300 ease-in-out"
-                                                href={candidate.resume}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Xem Resume
-                                            </a>) : (<p>None</p>)}
-                                        <CustomFileInput onChange={handleResumeChange} text="Chọn Resune"
-                                                         accept="application/pdf"/>
-                                        <button onClick={handleDeleteResume}
-                                                className="w-40 bg-red-500 text-white font-bold p-2 rounded mt-2">Xóa
-                                            Resume
-                                        </button>
+                                        <div className="flex items-center space-x-4 flex-grow">
+                                            {candidate.resumes && candidate.resumes.length > 0 ? (
+                                                <>
+                                                    <select
+                                                        value={selectedResume}
+                                                        onChange={(e) => setSelectedResume(e.target.value)}
+                                                        className="w-1/3 p-2 border rounded-lg"
+                                                    >
+                                                        {candidate.resumes.map((resume, index) => (
+                                                            <option key={index} value={resume}>
+                                                                Resume {index + 1}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {selectedResume && (
+                                                        <div className="flex items-center space-x-4">
+                                                            <a
+                                                                className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-700 transition duration-300 ease-in-out"
+                                                                href={selectedResume}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                            >
+                                                                Xem Resume
+                                                            </a>
+                                                            <button
+                                                                onClick={() => handleDeleteResume(selectedResume)}
+                                                                className="py-2 px-4 bg-red-500 text-white font-bold rounded hover:bg-red-700"
+                                                            >
+                                                                Xóa Resume
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <p>Không có resume nào</p>
+                                            )}
+                                        </div>
                                     </div>
+                                    <CustomFileInput onChange={handleResumeChange} text="Thêm Resume" accept="application/pdf"/>
                                 </div>
                                 <div className="flex justify-start space-x-4 mt-4">
                                     <button
@@ -306,17 +336,32 @@ const CandidateProfile = ({candidateId}) => {
                                 <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Address: </span> {candidate.address}
                                 </p>
-                                <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
-                                    <span
-                                        className="font-bold w-20 mr-2">Resume: </span> {candidate.resume ? (
-                                    <a
-                                        className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-700 transition duration-300 ease-in-out"
-                                        href={candidate.resume}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        Xem Resume
-                                    </a>) : 'None'}
+                                <p className="text-gray-600 mb-2 py-2 flex h-fit items-center border-b border-gray-300">
+                                    <span className="font-bold w-20 mr-2">Resume: </span>
+                                    {candidate.resumes && candidate.resumes.length > 0 ? (
+                                        <select
+                                            value={selectedResume}
+                                            onChange={(e) => setSelectedResume(e.target.value)}
+                                            className="w-1/3 p-2 border rounded-lg mr-2"
+                                        >
+                                            {candidate.resumes.map((resume, index) => (
+                                                <option key={index} value={resume}>
+                                                    Resume {index + 1}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : 'Không có resume nào'}
+
+                                    {selectedResume && (
+                                        <a
+                                            className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-700 transition duration-300 ease-in-out"
+                                            href={selectedResume}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Xem Resume
+                                        </a>
+                                    )}
                                 </p>
                                 <button
                                     onClick={() => {
@@ -334,7 +379,8 @@ const CandidateProfile = ({candidateId}) => {
             </div>
             <NotificationPopup error={error} message={notification} onClose={() => setNotification('')}/>
         </div>
-    );
+    )
+
 };
 
 export default CandidateProfile;
