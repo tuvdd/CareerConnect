@@ -37,10 +37,11 @@ const AboutCompany = ({user, company}) => {
 
             if (file.type === allowedType) {
                 setNewLogo(file);
-                setErrors(prevErrors => ({...prevErrors, logo: ''}));
+                setError('false');
             } else {
                 setNewLogo(null);
-                setErrors(prevErrors => ({...prevErrors, logo: 'Chỉ chấp nhận hình ảnh với định dạng PNG.'}));
+                setNotification('Chỉ chấp nhận file với định dạng PDF.');
+                setError('true');
             }
         }
     };
@@ -62,6 +63,10 @@ const AboutCompany = ({user, company}) => {
 
     const handleSave = async () => {
         if (!validateFields()) {
+            return;
+        }
+
+        if (error === 'true') {
             return;
         }
 

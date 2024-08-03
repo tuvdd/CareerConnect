@@ -57,10 +57,11 @@ const CandidateProfile = ({candidateId}) => {
 
             if (file.type === allowedType) {
                 setNewImage(file);
-                setErrors(prevErrors => ({...prevErrors, image: ''}));
+                setError('false');
             } else {
                 setNewImage(null);
-                setErrors(prevErrors => ({...prevErrors, image: 'Chỉ chấp nhận hình ảnh với định dạng PNG.'}));
+                setNotification('Chỉ chấp nhận hình ảnh với định dạng PNG.');
+                setError('true');
             }
         }
     };
@@ -73,10 +74,11 @@ const CandidateProfile = ({candidateId}) => {
 
             if (file.type === allowedType) {
                 setNewResume(file);
-                setErrors(prevErrors => ({...prevErrors, resume: ''}));
+                setError('false');
             } else {
                 setNewResume(null);
-                setErrors(prevErrors => ({...prevErrors, resume: 'Chỉ chấp nhận file với định dạng PDF.'}));
+                setNotification('Chỉ chấp nhận file với định dạng PDF.');
+                setError('true');
             }
         }
     };
@@ -99,6 +101,10 @@ const CandidateProfile = ({candidateId}) => {
 
     const handleSave = async () => {
         if (!validateFields()) {
+            return;
+        }
+
+        if (error === 'true') {
             return;
         }
 
