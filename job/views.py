@@ -39,7 +39,7 @@ class JobCreateAPIView(generics.CreateAPIView):
 
 
 class JobListAPIView(generics.ListAPIView):
-    queryset = Job.objects.all()
+    queryset = Job.objects.all().order_by('-post_date')
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -60,7 +60,7 @@ class JobListByCompanyAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         company_id = self.kwargs['company_id']
-        return Job.objects.filter(company_id=company_id)
+        return Job.objects.filter(company_id=company_id).order_by('-post_date')
 
 
 class TopJobsAPIView(generics.ListAPIView):

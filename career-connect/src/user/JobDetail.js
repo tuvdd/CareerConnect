@@ -4,11 +4,13 @@ import LoadingSpinner from '../components/Loading';
 import {useParams} from 'react-router-dom';
 import Navbar from '../components/navbar';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faClock, faEnvelope, faLocationDot, faPhone} from '@fortawesome/free-solid-svg-icons';
+import {faEnvelope, faLocationDot, faPhone} from '@fortawesome/free-solid-svg-icons';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import NotificationPopup from "../components/NotificationPopup";
 import ConfirmationPopup from "../components/ConfirmationPopup";
+import {formatDistanceToNow, parseISO} from "date-fns";
+import {vi} from "date-fns/locale";
 
 const JobDetail = () => {
     const {id} = useParams();
@@ -32,6 +34,8 @@ const JobDetail = () => {
     const [notification, setNotification] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const [applicationDetails, setApplicationDetails] = useState(null);
+    const [showResumeSelector, setShowResumeSelector] = useState(false);
+    const [applicationsByJob, setApplicationsByJob] = useState([]);
 
     useEffect(() => {
         const fetchJobDetail = async () => {
@@ -60,6 +64,9 @@ const JobDetail = () => {
                 if (userCompanyResponse.data.id === jobCompanyResponse.data.id) {
                     setIsCompanyOwner(true);
                 }
+
+                const applicationsResponse = await axiosInstance.get(`api/jobs/${id}/applications/`);
+                setApplicationsByJob(applicationsResponse.data);
             } catch (error) {
                 console.error('Error fetching job detail:', error);
             } finally {
@@ -110,7 +117,7 @@ const JobDetail = () => {
                 salary: formValues.salary,
                 location: formValues.location,
                 description: formValues.description,
-                company: company.id
+                company: company.id,
             };
             await axiosInstance.put(`api/jobs/${id}/`, updatedJob);
             setNotification('Job updated successfully');
@@ -131,7 +138,6 @@ const JobDetail = () => {
             await axiosInstance.patch(`api/jobs/${id}/`, {status: 'Closed'});
             setNotification('Job closed successfully');
             setError('false');
-            window.location.reload();
         } catch (error) {
             console.error('Error closing job:', error);
             setNotification('Error closing job');
@@ -144,8 +150,9 @@ const JobDetail = () => {
     };
 
     const handleConfirmPopup = () => {
-        handleCloseJob();
-        setShowPopup(false);
+        handleCloseJob().then(r => {
+            window.location.reload();
+        });
     };
 
     const handleCancelPopup = () => {
@@ -153,23 +160,29 @@ const JobDetail = () => {
     };
 
     const handleApply = async () => {
-        if (!candidate.resume) {
-            setNotification('Resume is required');
+        if (!candidate?.resumes || candidate.resumes.length === 0) {
+            setNotification('At least one resume is required');
             setError('true');
             return;
         }
 
+        setShowResumeSelector(true);
+    };
+
+    const handleSelectResume = (selectedResume) => {
         const newApplication = {
             date: new Date().toISOString().split('T')[0],
             status: 'Applied',
-            resume: candidate?.resume,
+            resume: selectedResume,
             candidate: candidate?.id,
             job: job.id,
         };
 
         setApplicationDetails(newApplication);
         setShowPopup(true);
+        setShowResumeSelector(false);
     };
+
 
     const confirmApply = async () => {
         try {
@@ -218,7 +231,37 @@ const JobDetail = () => {
                             candidate={candidate}
                         />
                     )}
+                    {showResumeSelector && (
+                        <ResumeSelector
+                            resumes={candidate?.resumes || []}
+                            onSelect={handleSelectResume}
+                            onClose={() => setShowResumeSelector(false)}
+                        />
+                    )}
                     <NotificationPopup error={error} message={notification} onClose={() => setNotification('')}/>
+                    {role === 'company' && isCompanyOwner && (
+                        <div className="w-4/5 p-4 bg-white border border-gray-300 rounded-md shadow-lg mt-4">
+                            <h2 className="text-2xl font-bold mb-4">Applications</h2>
+                            {applicationsByJob.length === 0 ? (
+                                <p className="text-gray-700">No applications for this job yet.</p>
+                            ) : (
+                                <ul className="space-y-2">
+                                    {applicationsByJob.map(application => (
+                                        <li key={application.id} className="border-b border-gray-300 pb-2 mb-2">
+                                            <p className="text-gray-700">
+                                                <strong>Candidate:</strong> {application.candidate.firstname} {application.candidate.lastname}
+                                            </p>
+                                            <p className="text-gray-700"><strong>Status:</strong> {application.status}
+                                            </p>
+                                            <p className="text-gray-700"><strong>Date:</strong> {application.date}</p>
+                                            <a href={application.resume} className="text-blue-500 hover:underline"
+                                               target="_blank" rel="noopener noreferrer">View Resume</a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )};
                 </div>
             </div>
         </div>
@@ -274,69 +317,66 @@ const JobView = ({
         <p className="text-gray-700 text-md mb-2"><strong>Description:</strong></p>
         <div className="text-gray-500 text-sm mb-4 custom-html-content"
              dangerouslySetInnerHTML={{__html: job?.description}}/>
-        <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job?.status}</p>
-        <p className="text-gray-400 text-sm">
-            <FontAwesomeIcon icon={faClock} className="mr-2 w-4 h-4"/>
-            {new Date(job?.post_date).toLocaleString('vi-VN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-            })}
+        <p className="text-gray-700 text-md mb-2">
+            <strong>Posted:</strong> {formatDistanceToNow(parseISO(job?.post_date), {addSuffix: true, locale: vi})}
         </p>
-        {role === 'candidate' && (
-            <div className="flex justify-center mt-4">
-                <button
-                    className="bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={onApply}
-                >
-                    Apply
-                </button>
-            </div>
+        {role === 'company' && isCompanyOwner && job.status === 'Closed' && (
+            <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job.status}</p>
         )}
-        {role === 'company' && isCompanyOwner && (
-            <div className="flex justify-center mt-4 space-x-4">
-                <button
-                    className="bg-green-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={onEdit}
-                >
-                    Edit
-                </button>
-                <button
-                    className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={onClose}
-                >
-                    Close Job
-                </button>
-            </div>
-        )}
-        {role === 'admin' && (
-            <div className="flex justify-center mt-4">
-                <button
-                    className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    onClick={onClose}
-                >
-                    Hide Job
-                </button>
-            </div>
-        )}
-        {role === 'company' ? (
-            <ConfirmationPopup show={showPopup} title="Close job" message="Are you sure you want to close this job?"
-                               onConfirm={onConfirmPopup} onClose={onCancelPopup}/>
-        ) : (
-            <ConfirmationPopup
-                show={showPopup}
-                onConfirm={confirmApply}
-                onClose={onCancelPopup}
-                title="Confirm Application"
-                message={`Are you sure you want to apply for this job with the following details? \n
+        <div className="flex justify-center mt-4 space-x-4">
+            {role === 'candidate' && (
+                <div className="flex justify-center mt-4">
+                    <button
+                        className="bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        onClick={onApply}
+                    >
+                        Apply
+                    </button>
+                </div>
+            )}
+            {role === 'company' && isCompanyOwner && job.status === 'Activated' && (
+                <div className="flex justify-center mt-4 space-x-4">
+                    <button
+                        className="bg-green-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        onClick={onEdit}
+                    >
+                        Edit
+                    </button>
+                    <button
+                        className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        onClick={onClose}
+                    >
+                        Close Job
+                    </button>
+                </div>
+            )}
+            {role === 'admin' && (
+                <div className="flex justify-center mt-4">
+                    <button
+                        className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        onClick={onClose}
+                    >
+                        Hide Job
+                    </button>
+                </div>
+            )}
+            {role === 'company' ? (
+                <ConfirmationPopup show={showPopup} title="Close job"
+                                   message="Are you sure you want to close this job?"
+                                   onConfirm={onConfirmPopup} onClose={onCancelPopup}/>
+            ) : (
+                <ConfirmationPopup
+                    show={showPopup}
+                    onConfirm={confirmApply}
+                    onClose={onCancelPopup}
+                    title="Confirm Application"
+                    message={`Are you sure you want to apply for this job with the following details? \n
                             Candidate: ${candidate?.firstname} ${candidate?.lastname} \n
                             Date: ${application?.date} \n
                             Status: ${application?.status}`}
-                resumeLink={application?.resume}/>
-        )}
+                    resumeLink={application?.resume}/>
+            )}
+        </div>
     </div>
 );
 
@@ -397,7 +437,7 @@ const JobEditForm = ({formValues, errors, onChange, onDescriptionChange, onSave,
                 className="bg-green-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 onClick={onSave}
             >
-                Save
+                Save changes
             </button>
             <button
                 className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -408,5 +448,52 @@ const JobEditForm = ({formValues, errors, onChange, onDescriptionChange, onSave,
         </div>
     </div>
 );
+
+const ResumeSelector = ({resumes, onSelect, onClose}) => {
+    const [selectedResume, setSelectedResume] = useState('');
+
+    const handleSelect = () => {
+        if (!selectedResume) {
+            alert('Please select a resume');
+            return;
+        }
+        onSelect(selectedResume);
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded shadow-lg">
+                <h2 className="text-lg font-bold mb-4">Select a Resume</h2>
+                <select
+                    className="border border-gray-300 p-2 mb-4 w-full"
+                    value={selectedResume}
+                    onChange={(e) => setSelectedResume(e.target.value)}
+                >
+                    <option value="">Select a resume</option>
+                    {resumes.map((resume, index) => (
+                        <option key={index} value={resume}>
+                            {resume}
+                        </option>
+                    ))}
+                </select>
+                <div className="flex justify-end space-x-4">
+                    <button
+                        className="bg-blue-500 text-white font-bold py-2 px-4 rounded"
+                        onClick={handleSelect}
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        className="bg-gray-500 text-white font-bold py-2 px-4 rounded"
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 export default JobDetail;
