@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import axiosInstance from "../AxiosConfig";
 import { Link } from 'react-router-dom';
 import LoadingSpinner from "./Loading";
+import {formatDistanceToNow, parseISO} from "date-fns";
+import {vi} from "date-fns/locale";
 
 const JobCard = ({ id, title, company, salary, location, description, timePosted, status }) => {
     const [companyData, setCompanyData] = useState(null);
     const [sanitizedHtml, setSanitizedHtml] = useState(description || "");
     const [loading, setLoading] = useState(true);
+
+    const timeAgo = formatDistanceToNow(parseISO(timePosted), { addSuffix: true, locale: vi });
 
     useEffect(() => {
         const fetchCompanyData = async () => {
@@ -50,16 +54,7 @@ const JobCard = ({ id, title, company, salary, location, description, timePosted
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: 'vertical'
                             }} dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
-                            <p className="text-gray-400 text-sm mt-4">
-                                {new Date(timePosted).toLocaleString('vi-VN', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
-                            </p>
+                            <p className="text-gray-400 text-sm mt-4">{timeAgo}</p>
                         </div>
                     </div>
                 </div>
