@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from .models import ChatRoom, Message
 from .serializers import ChatRoomSerializer, MessageSerializer
 from rest_framework.response import Response
@@ -9,6 +9,8 @@ from rest_framework.response import Response
 class ChatRoomViewSet(viewsets.ModelViewSet):
     queryset = ChatRoom.objects.all()
     serializer_class = ChatRoomSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
     # API endpoint để đếm số tin nhắn chưa đọc trong một phòng trò chuyện
     def count_unseen_messages(self, request, pk=None):
@@ -54,6 +56,8 @@ class ChatRoomViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
     # API endpoint để xóa tin nhắn nếu người dùng là người gửi
     def delete_message_if_sender(self, request, pk=None):
