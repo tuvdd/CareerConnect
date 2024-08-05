@@ -35,12 +35,16 @@ const Homepage = () => {
         fetchJobs();
     }, []);
 
-    useEffect(() => {
-        const start = (page - 1) * pageSize;
+    const loadMoreJobs = () => {
+        const start = page * pageSize;
         const end = start + pageSize;
-        setDisplayedJobs(jobs.slice(start, end));
+        setDisplayedJobs(prevDisplayedJobs => [
+            ...prevDisplayedJobs,
+            ...jobs.slice(start, end),
+        ]);
+        setPage(prevPage => prevPage + 1);
         setHasMore(end < jobs.length);
-    }, [page, jobs]);
+    };
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -85,7 +89,7 @@ const Homepage = () => {
                 <h1 className="text-3xl font-bold my-6">Danh sách việc làm</h1>
                 <InfiniteScroll
                     dataLength={displayedJobs.length}
-                    next={() => setPage(prevPage => prevPage + 1)}
+                    next={loadMoreJobs}
                     hasMore={hasMore}
                     loader={<h4>Loading...</h4>}
                     endMessage={<p className="text-center">No more jobs</p>}

@@ -108,7 +108,7 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         resume_files = request.FILES.getlist('resume')
 
         image_url = None
-        resumes = list(instance.resumes)
+        resumes = list(instance.resumes or [])
 
         if image_files:
             image = image_files[0]
