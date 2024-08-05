@@ -3,17 +3,55 @@ import Navbar from "../components/navbar";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLocationDot, faPhone, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import CreateJobForm from "./CreateJobForm";
-import JobCard from "../components/JobCard";
 import AboutCompany from "./AboutCompany";
 import NotificationPopup from "../components/NotificationPopup";
 import LoadingSpinner from "../components/Loading";
-import useCompanyData from './CompanyData';
 import ViewJobs from "./ViewJobs";
+import {useParams} from "react-router-dom";
+import axiosInstance from "../AxiosConfig";
 
 const CompanyProfile = () => {
-    const { user, company, loading, error } = useCompanyData();
+    const { companyId } = useParams();
+    const [currentUser, setCurrentUser] = useState(null);
+    const [company, setCompany] = useState(null);
+    const [ jobs, setJobs ] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [selectedOption, setSelectedOption] = useState('aboutCompany');
     const [notification, setNotification] = useState('');
+
+    useEffect(() => {
+        const fetchCompanyData = async () => {
+            try {
+                const [currentUserResponse, companyResponse, jobsResponse] = await Promise.all([
+                    axiosInstance.get('api/user/'),
+                    axiosInstance.get(`api/companies/${companyId}`),
+                    axiosInstance.get(`api/companies/${companyId}/jobs/`)
+                ]);
+
+                setCurrentUser(currentUserResponse.data);
+                setCompany(companyResponse.data);
+                setJobs(jobsResponse.data);
+            } catch (error) {
+                console.error("Error fetching user or company details", error);
+                setNotification('Error fetching data');
+                setError('true');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const resetData = () => {
+            setCompany(null);
+            setJobs([]);
+            setSelectedOption('aboutCompany');
+        }
+
+        resetData();
+        fetchCompanyData();
+    }, [companyId]);
+
+    const isOwner = currentUser && company && currentUser.id === company.user.id;
 
     function handleOptionClick(option) {
         setSelectedOption(option);
@@ -41,7 +79,7 @@ const CompanyProfile = () => {
                             </span>
                             <span className="flex items-center">
                                 <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4" />
-                                <p>{user?.email}</p>
+                                <p>{company?.user.email}</p>
                             </span>
                         </div>
                     </div>
@@ -52,23 +90,25 @@ const CompanyProfile = () => {
                             className={`text-2xl cursor-pointer p-5 border-b border-black ${selectedOption === 'aboutCompany' ? 'font-bold text-red-500 border-b-2 border-red-500' : ''}`}
                             onClick={() => handleOptionClick('aboutCompany')}>Giới thiệu
                         </button>
-                        <button
-                            className={`text-2xl cursor-pointer p-5 border-b border-black ${selectedOption === 'createJob' ? 'font-bold text-red-500 border-b-2 border-red-500' : ''}`}
-                            onClick={() => handleOptionClick('createJob')}>Thêm công việc
-                        </button>
+                        {isOwner && (
+                            <button
+                                className={`text-2xl cursor-pointer p-5 border-b border-black ${selectedOption === 'createJob' ? 'font-bold text-red-500 border-b-2 border-red-500' : ''}`}
+                                onClick={() => handleOptionClick('createJob')}>Thêm công việc
+                            </button>
+                        )}
                         <button
                             className={`text-2xl cursor-pointer p-5 border-b border-black ${selectedOption === 'viewJobs' ? 'font-bold text-red-500 border-b-2 border-red-500' : ''}`}
                             onClick={() => handleOptionClick('viewJobs')}>Công việc đã tạo
                         </button>
                     </div>
-                    {selectedOption === 'aboutCompany' && company && user && (
-                        <AboutCompany company={company} user={user}/>
+                    {selectedOption === 'aboutCompany' && company && (
+                        <AboutCompany company={company} isOwner={isOwner}/>
                     )}
-                    {selectedOption === 'createJob' && company && (
+                    {selectedOption === 'createJob' && company && isOwner && (
                         <CreateJobForm company={company}/>
                     )}
                     {selectedOption === 'viewJobs' && company && (
-                        <ViewJobs company={company}/>
+                        <ViewJobs company={company} jobs={jobs}/>
                     )}
                 </div>
             </div>

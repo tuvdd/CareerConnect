@@ -21,8 +21,8 @@ root.render(
             <Route path="/list-of-applied-jobs" element={<AppliedJob/>}></Route>
             <Route path="/register" element={<Register />} />
             <Route path="/home" element={(isAuthenticated) ? <Homepage /> : <Navigate to="/register" replace />} />
-            <Route path="/candidate-profile" element={(isAuthenticated && role === 'candidate') ? <CandidateProfile /> : <Navigate to="/register" replace />} />
-            <Route path="/company-profile" element={(isAuthenticated && role === 'company') ? <CompanyProfile /> : <Navigate to="/register" replace />} />
+            <Route path="/candidate-profile/:candidateId" element={(isAuthenticated) ? <CandidateProfile /> : <Navigate to="/register" replace />} />
+            <Route path="/company-profile/:companyId" element={(isAuthenticated) ? <CompanyProfile /> : <Navigate to="/register" replace />} />
             <Route path="/admin" element={(isAuthenticated && role === 'admin') ? <AdministratorDashboard /> : <Navigate to="/register" replace />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
         </Routes>

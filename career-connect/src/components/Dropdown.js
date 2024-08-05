@@ -30,9 +30,9 @@ function Dropdown() {
 
     const goToProfile = () => {
         if (role === 'candidate') {
-            navigate('/candidate-profile');
+            navigate(`/candidate-profile/${candidate.id}`);
         } else if (role === 'company') {
-            navigate('/company-profile');
+            navigate(`/company-profile/${company.id}`);
         } else {
             navigate('/admin');
         }

@@ -4,9 +4,11 @@ import Navbar from "../components/navbar";
 import NotificationPopup from "../components/NotificationPopup";
 import LoadingSpinner from "../components/Loading";
 import CustomFileInput from "../components/CustomFileInput";
+import {useParams} from "react-router-dom";
 
-const CandidateProfile = ({candidateId}) => {
-    const [user, setUser] = useState(null);
+const CandidateProfile = () => {
+    const { candidateId } = useParams();
+    const [currentUser, setCurrentUser] = useState(null);
     const [candidate, setCandidate] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -20,18 +22,19 @@ const CandidateProfile = ({candidateId}) => {
 
     useEffect(() => {
         const fetchCandidateData = async () => {
+            setLoading(true);
             try {
-                const userResponse = await axiosInstance.get('api/user/');
-                setUser(userResponse.data);
+                const [currentUserResponse, candidateResponse] = await Promise.all([
+                    axiosInstance.get('api/user/'),
+                    axiosInstance.get(`api/candidates/${candidateId}`)
+                ]);
 
-                if (userResponse.data.id) {
-                    const candidateResponse = await axiosInstance.get(`api/candidates/?user=${userResponse.data.id}`);
-                    setCandidate(candidateResponse.data[0]);
-                    setOriginalCandidate(candidateResponse.data[0]);
+                setCurrentUser(currentUserResponse.data);
+                setCandidate(candidateResponse.data);
+                setOriginalCandidate(candidateResponse.data);
 
-                    if (candidateResponse.data[0].resumes && candidateResponse.data[0].resumes.length > 0) {
-                        setSelectedResume(candidateResponse.data[0].resumes[0]);
-                    }
+                if (candidateResponse.data.resumes && candidateResponse.data.resumes.length > 0) {
+                    setSelectedResume(candidateResponse.data.resumes[0]);
                 }
             } catch (error) {
                 console.error("Error fetching user or candidate details", error);
@@ -41,8 +44,20 @@ const CandidateProfile = ({candidateId}) => {
             }
         };
 
+        const resetData = () => {
+            setNotification('');
+            setError('');
+            setIsEditing(false);
+            setNewImage(null);
+            setNewResume(null);
+            setSelectedResume('');
+        }
+
+        resetData();
         fetchCandidateData();
-    }, []);
+    }, [candidateId]);
+
+    const isOwner = currentUser && candidate && currentUser.id === candidate.user.id;
 
     const handleInputChange = (e) => {
         const {name, value} = e.target;
@@ -130,6 +145,7 @@ const CandidateProfile = ({candidateId}) => {
             setNotification('Information changed successfully');
             setError('false');
             setIsEditing(false);
+            return window.location.reload();
         } catch (error) {
             console.error("Error updating candidate details", error);
             setNotification('Error saving data');
@@ -218,7 +234,7 @@ const CandidateProfile = ({candidateId}) => {
                                     <input
                                         type="email"
                                         name="email"
-                                        value={user.email}
+                                        value={candidate.user.email}
                                         disabled
                                         className="mb-1 w-full p-2 border rounded-lg bg-gray-200"
                                     />
@@ -309,7 +325,8 @@ const CandidateProfile = ({candidateId}) => {
                                             )}
                                         </div>
                                     </div>
-                                    <CustomFileInput onChange={handleResumeChange} text="Thêm Resume" accept="application/pdf"/>
+                                    <CustomFileInput onChange={handleResumeChange} text="Thêm Resume"
+                                                     accept="application/pdf"/>
                                 </div>
                                 <div className="flex justify-start space-x-4 mt-4">
                                     <button
@@ -330,7 +347,7 @@ const CandidateProfile = ({candidateId}) => {
                             <>
                                 <h1 className="text-3xl font-bold mb-4 text-center">{`${candidate.firstname} ${candidate.lastname}`}</h1>
                                 <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
-                                    <span className="font-bold w-20 mr-2">Email:</span> {user.email}
+                                    <span className="font-bold w-20 mr-2">Email:</span> {candidate.user.email}
                                 </p>
                                 <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-20 mr-2">Birthday: </span>
@@ -369,15 +386,17 @@ const CandidateProfile = ({candidateId}) => {
                                         </a>
                                     )}
                                 </p>
-                                <button
-                                    onClick={() => {
-                                        setIsEditing(true);
-                                        setOriginalCandidate({...candidate});
-                                    }}
-                                    className="w-16 mt-4 bg-green-500 text-white font-bold p-2 rounded"
-                                >
-                                    Edit
-                                </button>
+                                {isOwner && (
+                                    <button
+                                        onClick={() => {
+                                            setIsEditing(true);
+                                            setOriginalCandidate({...candidate});
+                                        }}
+                                        className="w-16 mt-4 bg-green-500 text-white font-bold p-2 rounded"
+                                    >
+                                        Edit
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>
