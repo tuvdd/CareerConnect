@@ -3,7 +3,7 @@ from rest_framework import generics, permissions, filters, status
 from rest_framework.response import Response
 
 from .models import Job, Application
-from .serializers import JobSerializer, ApplicationSerializer
+from .serializers import JobSerializer, ApplicationSerializer, CreateJobSerializer, CreateApplicationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
 
@@ -34,7 +34,7 @@ class ApplicationFilter(django_filters.FilterSet):
 
 class JobCreateAPIView(generics.CreateAPIView):
     queryset = Job.objects.all()
-    serializer_class = JobSerializer
+    serializer_class = CreateJobSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -77,7 +77,7 @@ class TopJobsAPIView(generics.ListAPIView):
 
 class ApplicationCreateAPIView(generics.CreateAPIView):
     queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
+    serializer_class = CreateApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
