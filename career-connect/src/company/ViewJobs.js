@@ -1,31 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import axiosInstance from "../AxiosConfig";
 import JobCard from "../components/JobCard";
-import LoadingSpinner from "../components/Loading";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-const ViewJobs = (company) => {
-    const [jobs, setJobs] = useState([]);
-    const [loading, setLoading] = useState(true);
+const ViewJobs = ({ company, jobs }) => {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
     const pageSize = 5;
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            try {
-                const response = await axiosInstance.get(`api/companies/${company.company.id}/jobs/`);
-                const allJobs = response.data;
-                setJobs(allJobs);
-                setHasMore(allJobs.length > pageSize);
-            } catch (error) {
-                console.error('Error fetching jobs:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchJobs();
+        setHasMore(jobs.length > pageSize);
     }, []);
 
     useEffect(() => {
@@ -33,8 +16,6 @@ const ViewJobs = (company) => {
         const end = start + pageSize;
         setHasMore(end < jobs.length);
     }, [page, jobs]);
-
-    if (loading) return <LoadingSpinner />;
 
     return (
         <div className="container w-full h-fit flex flex-col items-center justify-center">
@@ -51,7 +32,7 @@ const ViewJobs = (company) => {
                         key={job.id}
                         id={job.id}
                         title={job.title}
-                        company={job.company}
+                        company={company}
                         salary={job.salary}
                         location={job.location}
                         description={job.description}

@@ -1,9 +1,10 @@
 from django.db.models import Count
 from rest_framework import generics, permissions, filters, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Job, Application
-from .serializers import JobSerializer, ApplicationSerializer
+from .serializers import JobSerializer, ApplicationSerializer, CreateJobSerializer, CreateApplicationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
 
@@ -34,7 +35,7 @@ class ApplicationFilter(django_filters.FilterSet):
 
 class JobCreateAPIView(generics.CreateAPIView):
     queryset = Job.objects.all()
-    serializer_class = JobSerializer
+    serializer_class = CreateJobSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -77,7 +78,7 @@ class TopJobsAPIView(generics.ListAPIView):
 
 class ApplicationCreateAPIView(generics.CreateAPIView):
     queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
+    serializer_class = CreateApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -99,13 +100,18 @@ class ApplicationListByJobAPIView(generics.ListAPIView):
         return Application.objects.filter(job_id=job_id)
 
 
+class ApplicationPagination(PageNumberPagination):
+    page_size = 5
+
+
 class ApplicationListByCandidateAPIView(generics.ListAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = ApplicationPagination
 
     def get_queryset(self):
         candidate_id = self.kwargs['candidate_id']
-        return Application.objects.filter(candidate_id=candidate_id)
+        return Application.objects.filter(candidate_id=candidate_id).order_by('-date')
 
 
 class ApplicationDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

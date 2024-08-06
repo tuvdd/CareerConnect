@@ -7,7 +7,8 @@ import {
     faCaretUp,
     faRightFromBracket,
     faUser,
-    faUserTie
+    faUserTie,
+    faList
 } from '@fortawesome/free-solid-svg-icons';
 import {useNavigate} from "react-router-dom";
 import axiosInstance from "../AxiosConfig";
@@ -30,13 +31,17 @@ function Dropdown() {
 
     const goToProfile = () => {
         if (role === 'candidate') {
-            navigate('/candidate-profile');
+            navigate(`/candidate-profile/${candidate.id}`);
         } else if (role === 'company') {
-            navigate('/company-profile');
+            navigate(`/company-profile/${company.id}`);
         } else {
             navigate('/admin');
         }
     };
+
+    const goToAppliedList = () => {
+        navigate(`/list-of-applied-jobs/${candidate.id}`);
+    }
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -104,6 +109,13 @@ function Dropdown() {
                                 onClick={goToProfile}>
                             <FontAwesomeIcon icon={faAddressCard} className="mr-4"/>
                             Profile
+                        </button>
+                    )}
+                    {role === 'candidate' && (
+                        <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md"
+                                onClick={goToAppliedList}>
+                            <FontAwesomeIcon icon={faList} className="mr-4"/>
+                            Applied jobs
                         </button>
                     )}
                     <button className="w-full h-12 text-start hover:bg-gray-200 p-2 rounded-md" onClick={handleLogout}>

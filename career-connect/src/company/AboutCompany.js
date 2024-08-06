@@ -1,11 +1,11 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import axiosInstance from "../AxiosConfig";
 import NotificationPopup from "../components/NotificationPopup";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 import CustomFileInput from "../components/CustomFileInput";
 
-const AboutCompany = ({user, company}) => {
+const AboutCompany = ({company, isOwner}) => {
     const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -87,6 +87,7 @@ const AboutCompany = ({user, company}) => {
             setNotification('Information changed successfully');
             setError('false');
             setIsEditing(false);
+            return window.location.reload();
         } catch (error) {
             console.error("Error updating company details", error);
             setNotification('Error saving data');
@@ -108,7 +109,7 @@ const AboutCompany = ({user, company}) => {
                         <img
                             src={newLogo ? URL.createObjectURL(newLogo) : newCompany?.logo}
                             alt={newCompany?.name}
-                            className="w-40 h-40 rounded-full object-cover mb-4"
+                            className="w-40 h-40 rounded-md object-cover mb-4"
                         />
                         {isEditing && (
                             <CustomFileInput onChange={handleLogoChange} text="Chọn logo" accept="image/png"/>
@@ -135,7 +136,7 @@ const AboutCompany = ({user, company}) => {
                                     <input
                                         type="email"
                                         name="email"
-                                        value={user.email}
+                                        value={company.user.email}
                                         disabled
                                         className="mb-1 w-full p-2 border rounded-lg bg-gray-200"
                                     />
@@ -218,7 +219,7 @@ const AboutCompany = ({user, company}) => {
                             <>
                                 <h1 className="text-3xl font-bold mb-4 text-center">{company.name}</h1>
                                 <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
-                                    <span className="font-bold w-24 mr-2">Email:</span> {user.email}
+                                    <span className="font-bold w-24 mr-2">Email:</span> {company.user.email}
                                 </p>
                                 <p className="text-gray-600 mb-2 pt-2 flex h-fit items-center border-b border-gray-300">
                                     <span className="font-bold w-24 mr-2">Field: </span>
@@ -237,15 +238,17 @@ const AboutCompany = ({user, company}) => {
                                         dangerouslySetInnerHTML={{__html: sanitizedHtml}}
                                     />
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        setIsEditing(true);
-                                        setNewCompany({...company});
-                                    }}
-                                    className="w-16 mt-4 bg-green-500 text-white font-bold p-2 rounded"
-                                >
-                                    Edit
-                                </button>
+                                {isOwner && (
+                                    <button
+                                        onClick={() => {
+                                            setIsEditing(true);
+                                            setNewCompany({...company});
+                                        }}
+                                        className="w-16 mt-4 bg-green-500 text-white font-bold p-2 rounded"
+                                    >
+                                        Edit
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>
