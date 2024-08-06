@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import axiosInstance from '../AxiosConfig';
 import LoadingSpinner from '../components/Loading';
-import {useParams} from 'react-router-dom';
+import {Link, useParams} from 'react-router-dom';
 import Navbar from '../components/navbar';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faEnvelope, faLocationDot, faPhone} from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +11,7 @@ import NotificationPopup from "../components/NotificationPopup";
 import ConfirmationPopup from "../components/ConfirmationPopup";
 import {formatDistanceToNow, parseISO} from "date-fns";
 import {vi} from "date-fns/locale";
+import ApplicationModal from "./ApplicationModal";
 
 const JobDetail = () => {
     const {id} = useParams();
@@ -36,6 +37,8 @@ const JobDetail = () => {
     const [applicationDetails, setApplicationDetails] = useState(null);
     const [showResumeSelector, setShowResumeSelector] = useState(false);
     const [applicationsByJob, setApplicationsByJob] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [applicationModel, setApplicationModel] = useState(null);
 
     useEffect(() => {
         const fetchJobDetail = async () => {
@@ -250,19 +253,26 @@ const JobDetail = () => {
                             ) : (
                                 <ul className="space-y-2">
                                     {applicationsByJob.map(application => (
-                                        <li key={application.id} className="border-b border-gray-300 pb-2 mb-2">
+                                        <li key={application.id} className="border-b border-gray-300 pb-2 mb-2"
+                                            onClick={() => {
+                                                setIsModalOpen(true);
+                                                setApplicationModel(application);
+                                            }}>
                                             <p className="text-gray-700">
                                                 <strong>Candidate:</strong> {application.candidate.firstname} {application.candidate.lastname}
                                             </p>
                                             <p className="text-gray-700"><strong>Status:</strong> {application.status}
                                             </p>
                                             <p className="text-gray-700"><strong>Date:</strong> {application.date}</p>
-                                            <a href={application.resume} className="text-blue-500 hover:underline"
-                                               target="_blank" rel="noopener noreferrer">View Resume</a>
                                         </li>
                                     ))}
                                 </ul>
                             )}
+                            <ApplicationModal
+                                isOpen={isModalOpen}
+                                onClose={() => {setIsModalOpen(false)}}
+                                application={applicationModel}
+                            />
                         </div>
                     )};
                 </div>
@@ -273,28 +283,30 @@ const JobDetail = () => {
 
 const CompanyInfo = (company) => (
     <div className="w-4/5 p-4 border border-gray-300 bg-white rounded-md shadow-lg">
-        <div className="flex w-full justify-center items-center">
-            <img
-                src={company?.company.logo}
-                alt="Company Logo"
-                className="w-40 h-40 mr-10 border border-gray-200 shadow-lg rounded-md"
-            />
-            <div className="leading-9">
-                <h1 className="text-2xl font-bold">{company?.company.name}</h1>
-                <span className="flex items-center">
+        <Link to={`/company-profile/${company.company.id}`} className="no-underline" target="_blank" rel="noopener noreferrer">
+            <div className="flex w-full justify-center items-center">
+                <img
+                    src={company?.company.logo}
+                    alt="Company Logo"
+                    className="w-40 h-40 mr-10 border border-gray-200 shadow-lg rounded-md"
+                />
+                <div className="leading-9">
+                    <h1 className="text-2xl font-bold">{company?.company.name}</h1>
+                    <span className="flex items-center">
                     <FontAwesomeIcon icon={faLocationDot} className="mr-2 w-4 h-4"/>
                     <p>{company?.company.address}</p>
                 </span>
-                <span className="flex items-center">
+                    <span className="flex items-center">
                     <FontAwesomeIcon icon={faPhone} className="mr-2 w-4 h-4"/>
                     <p>{company?.company.phone}</p>
                 </span>
-                <span className="flex items-center">
+                    <span className="flex items-center">
                     <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4"/>
                     <p>{company?.company.user.email}</p>
                 </span>
+                </div>
             </div>
-        </div>
+        </Link>
     </div>
 );
 
