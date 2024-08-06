@@ -32,7 +32,7 @@ const ViewJobs = ({ company, jobs }) => {
                         key={job.id}
                         id={job.id}
                         title={job.title}
-                        company={company.id}
+                        company={company}
                         salary={job.salary}
                         location={job.location}
                         description={job.description}
