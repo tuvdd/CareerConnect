@@ -1,10 +1,12 @@
 from django.db.models import Count
-from rest_framework import generics, permissions, filters, status
+from rest_framework import generics, permissions, filters, status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Job, Application
-from .serializers import JobSerializer, ApplicationSerializer
 from .permissions import IsOwnerOrAdminOrReadOnly
+
+from .serializers import JobSerializer, ApplicationSerializer, CreateJobSerializer, CreateApplicationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
 
@@ -35,7 +37,7 @@ class ApplicationFilter(django_filters.FilterSet):
 
 class JobCreateAPIView(generics.CreateAPIView):
     queryset = Job.objects.all()
-    serializer_class = JobSerializer
+    serializer_class = CreateJobSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -44,15 +46,20 @@ class JobListAPIView(generics.ListAPIView):
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    # filterset_fields = ["title", "description"]
     filterset_class = JobFilter
-    search_fields = ["title", "description", "company__name"]
+    search_fields = ["title", "company__name"]
 
 
 class JobDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]
+
+    def destroy(self, request, *args, **kwargs):
+        job = self.get_object()
+        Application.objects.filter(job=job).delete()
+        self.perform_destroy(job)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class JobListByCompanyAPIView(generics.ListAPIView):
@@ -78,7 +85,7 @@ class TopJobsAPIView(generics.ListAPIView):
 
 class ApplicationCreateAPIView(generics.CreateAPIView):
     queryset = Application.objects.all()
-    serializer_class = ApplicationSerializer
+    serializer_class = CreateApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
@@ -100,13 +107,18 @@ class ApplicationListByJobAPIView(generics.ListAPIView):
         return Application.objects.filter(job_id=job_id)
 
 
+class ApplicationPagination(PageNumberPagination):
+    page_size = 5
+
+
 class ApplicationListByCandidateAPIView(generics.ListAPIView):
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = ApplicationPagination
 
     def get_queryset(self):
         candidate_id = self.kwargs['candidate_id']
-        return Application.objects.filter(candidate_id=candidate_id)
+        return Application.objects.filter(candidate_id=candidate_id).order_by('-date')
 
 
 class ApplicationDetailAPIView(generics.RetrieveUpdateDestroyAPIView):

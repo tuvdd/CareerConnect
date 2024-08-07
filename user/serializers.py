@@ -76,7 +76,9 @@ class LoginSerializer(serializers.Serializer):
 
 
 class CandidateSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
     resumes = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+
     class Meta:
         model = Candidate
         fields = '__all__'
@@ -88,6 +90,8 @@ class CandidateSerializer(serializers.ModelSerializer):
 
 
 class CompanySerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
     class Meta:
         model = Company
         fields = '__all__'

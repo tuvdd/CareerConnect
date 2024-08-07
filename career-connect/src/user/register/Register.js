@@ -74,7 +74,11 @@ const Register = () => {
             navigate("/home");
         } catch (error) {
             console.error('Login failed:', error.response?.data || error.message);
-            setNotification('Đăng nhập thất bại. Vui lòng kiểm tra thông tin và thử lại.');
+            if (error.response.data.error) {
+                setNotification(error.response.data.error);
+            } else {
+                setNotification('Đăng nhập thất bại. Vui lòng kiểm tra thông tin và thử lại.');
+            }
             setError('true');
         } finally {
             setLoading(false)

@@ -1,10 +1,33 @@
 # CareerConnect
-## [Jira](https://careerconnect.atlassian.net/jira/software/projects/KAN/boards/1?atlOrigin=eyJpIjoiNTgwMjI1MDQyNDlmNDZlNmFkNzE2MWMzYmE3NWJkY2IiLCJwIjoiaiJ9)  
 ## Deploy link: 
 ## Technical:
 - Back-end: Django Rest Framework
 - Front-end: Reactjs, Tailwind
 - Database: Postgres
+
+#### Chi tiết version
+- Python: 3.12
+- Django: 5.0.7
+- Django REST Framework: 3.15.2
+- Node: 10.5.0
+- React: 18.3.1
+
+### Cài đặt và chạy project:
+1. Cách cài đặt project:  
+Require: Python, npm  
+B1: Khởi tạo môi trường ảo (venv hoặc pipenv)  
+B2: Mở terminal và chạy: pip install -r requirements.txt  
+B3: Mở terminal và chạy:
+	- cd career-connect
+	- npm i  
+
+    B4: Sử dụng pgAdmin 4 tạo 1 database mới.  
+B5: Copy file .env.example và đổi tên thành .env và điền các thông tin cần thiết vào file
+2. Cách chạy project:  
+B1: Chạy BE: python manage.py runserver  
+B2: Chạy FE: cd career-connect && npm start
+
+
 ### Features
 #### Company
 - Post jobs to seek candidates

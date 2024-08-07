@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import axiosInstance from '../AxiosConfig';
 import LoadingSpinner from '../components/Loading';
-import {useParams} from 'react-router-dom';
+import {Link, useParams} from 'react-router-dom';
 import Navbar from '../components/navbar';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faEnvelope, faLocationDot, faPhone} from '@fortawesome/free-solid-svg-icons';
@@ -11,16 +11,18 @@ import NotificationPopup from "../components/NotificationPopup";
 import ConfirmationPopup from "../components/ConfirmationPopup";
 import {formatDistanceToNow, parseISO} from "date-fns";
 import {vi} from "date-fns/locale";
+import ApplicationModal from "./ApplicationModal";
+import AdminButtonsProfile from "../components/AdminButtonsProfile";
 
 const JobDetail = () => {
     const {id} = useParams();
+    const [currentUser, setCurrentUser] = useState(null);
     const [job, setJob] = useState(null);
     const [company, setCompany] = useState(null);
-    const [user, setUser] = useState(null);
     const [candidate, setCandidate] = useState(null);
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [role, setRole] = useState('');
+    const role = localStorage.getItem('role');
     const [isCompanyOwner, setIsCompanyOwner] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [formValues, setFormValues] = useState({
@@ -36,37 +38,47 @@ const JobDetail = () => {
     const [applicationDetails, setApplicationDetails] = useState(null);
     const [showResumeSelector, setShowResumeSelector] = useState(false);
     const [applicationsByJob, setApplicationsByJob] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [applicationModel, setApplicationModel] = useState(null);
 
     useEffect(() => {
         const fetchJobDetail = async () => {
             try {
-                const jobResponse = await axiosInstance.get(`api/jobs/${id}/`);
-                setJob(jobResponse.data);
+                const [currentUserResponse, jobResponse, applicationsResponse] = await Promise.all([
+                    axiosInstance.get('api/user/'),
+                    axiosInstance.get(`api/jobs/${id}/`),
+                    axiosInstance.get(`api/jobs/${id}/applications/`)
+                ]);
 
-                const userResponse = await axiosInstance.get('api/user/');
-                setUser(userResponse.data);
+                setJob(jobResponse.data);
+                setCompany(jobResponse.data.company);
+                setCurrentUser(currentUserResponse.data);
+                setApplicationsByJob(applicationsResponse.data);
 
                 let userCompanyResponse = {data: {}};
-                let jobCompanyResponse = {data: {}};
-                if (userResponse.data.id) {
-                    const candidateResponse = await axiosInstance.get(`api/candidates/?user=${userResponse.data.id}`);
-                    setCandidate(candidateResponse.data[0]);
-                    userCompanyResponse = await axiosInstance.get(`api/companies/?user=${userResponse.data.id}`);
-                    const adminResponse = await axiosInstance.get(`api/admin/?user=${userResponse.data.id}`);
-                    setAdmin(adminResponse.data);
+                let apiUrl = '';
+                switch (currentUserResponse.data.role) {
+                    case 'candidate':
+                        apiUrl = `api/candidates/?user=${currentUserResponse.data.id}`;
+                        const candidateResponse = await axiosInstance.get(apiUrl);
+                        setCandidate(candidateResponse.data[0]);
+                        break;
+                    case 'company':
+                        apiUrl = `api/companies/?user=${currentUserResponse.data.id}`;
+                        userCompanyResponse = await axiosInstance.get(apiUrl);
+                        break;
+                    case 'admin':
+                        apiUrl = `api/admin/?user=${currentUserResponse.data.id}`;
+                        const adminResponse = await axiosInstance.get(apiUrl);
+                        setAdmin(adminResponse.data[0]);
+                        break;
+                    default:
+                        console.error('Invalid user role');
                 }
 
-                if (jobResponse.data.company) {
-                    const jobCompanyResponse = await axiosInstance.get(`api/companies/${jobResponse.data.company}/`);
-                    setCompany(jobCompanyResponse.data);
-                }
-
-                if (userCompanyResponse.data.id === jobCompanyResponse.data.id) {
+                if (userCompanyResponse && userCompanyResponse.data[0].id === jobResponse.data.company.id) {
                     setIsCompanyOwner(true);
                 }
-
-                const applicationsResponse = await axiosInstance.get(`api/jobs/${id}/applications/`);
-                setApplicationsByJob(applicationsResponse.data);
             } catch (error) {
                 console.error('Error fetching job detail:', error);
             } finally {
@@ -76,11 +88,6 @@ const JobDetail = () => {
 
         fetchJobDetail();
     }, [id]);
-
-    useEffect(() => {
-        const storedRole = localStorage.getItem('role');
-        setRole(storedRole);
-    }, []);
 
     const handleEdit = () => {
         setFormValues({
@@ -117,7 +124,7 @@ const JobDetail = () => {
                 salary: formValues.salary,
                 location: formValues.location,
                 description: formValues.description,
-                company: company.id,
+                company: company.company,
             };
             await axiosInstance.put(`api/jobs/${id}/`, updatedJob);
             setNotification('Job updated successfully');
@@ -174,7 +181,7 @@ const JobDetail = () => {
             date: new Date().toISOString().split('T')[0],
             status: 'Applied',
             resume: selectedResume,
-            candidate: candidate?.id,
+            candidate: candidate.id,
             job: job.id,
         };
 
@@ -205,7 +212,7 @@ const JobDetail = () => {
             <Navbar/>
             <div className="container bg-gray-100">
                 <div className="flex flex-col p-4 space-y-4 items-center">
-                    <CompanyInfo company={company} user={user}/>
+                    <CompanyInfo company={company}/>
                     {isEditing ? (
                         <JobEditForm
                             formValues={formValues}
@@ -247,19 +254,26 @@ const JobDetail = () => {
                             ) : (
                                 <ul className="space-y-2">
                                     {applicationsByJob.map(application => (
-                                        <li key={application.id} className="border-b border-gray-300 pb-2 mb-2">
+                                        <li key={application.id} className="border-b border-gray-300 pb-2 mb-2"
+                                            onClick={() => {
+                                                setIsModalOpen(true);
+                                                setApplicationModel(application);
+                                            }}>
                                             <p className="text-gray-700">
                                                 <strong>Candidate:</strong> {application.candidate.firstname} {application.candidate.lastname}
                                             </p>
                                             <p className="text-gray-700"><strong>Status:</strong> {application.status}
                                             </p>
                                             <p className="text-gray-700"><strong>Date:</strong> {application.date}</p>
-                                            <a href={application.resume} className="text-blue-500 hover:underline"
-                                               target="_blank" rel="noopener noreferrer">View Resume</a>
                                         </li>
                                     ))}
                                 </ul>
                             )}
+                            <ApplicationModal
+                                isOpen={isModalOpen}
+                                onClose={() => {setIsModalOpen(false)}}
+                                application={applicationModel}
+                            />
                         </div>
                     )};
                 </div>
@@ -268,30 +282,32 @@ const JobDetail = () => {
     );
 };
 
-const CompanyInfo = ({company, user}) => (
+const CompanyInfo = (company) => (
     <div className="w-4/5 p-4 border border-gray-300 bg-white rounded-md shadow-lg">
-        <div className="flex w-full justify-center items-center">
-            <img
-                src={company?.logo}
-                alt="Company Logo"
-                className="w-40 h-40 mr-10 border border-gray-200 shadow-lg rounded-md"
-            />
-            <div className="leading-9">
-                <h1 className="text-2xl font-bold">{company?.name}</h1>
-                <span className="flex items-center">
+        <Link to={`/company-profile/${company.company.id}`} className="no-underline" target="_blank" rel="noopener noreferrer">
+            <div className="flex w-full justify-center items-center">
+                <img
+                    src={company?.company.logo}
+                    alt="Company Logo"
+                    className="w-40 h-40 mr-10 border border-gray-200 shadow-lg rounded-md"
+                />
+                <div className="leading-9">
+                    <h1 className="text-2xl font-bold">{company?.company.name}</h1>
+                    <span className="flex items-center">
                     <FontAwesomeIcon icon={faLocationDot} className="mr-2 w-4 h-4"/>
-                    <p>{company?.address}</p>
+                    <p>{company?.company.address}</p>
                 </span>
-                <span className="flex items-center">
+                    <span className="flex items-center">
                     <FontAwesomeIcon icon={faPhone} className="mr-2 w-4 h-4"/>
-                    <p>{company?.phone}</p>
+                    <p>{company?.company.phone}</p>
                 </span>
-                <span className="flex items-center">
+                    <span className="flex items-center">
                     <FontAwesomeIcon icon={faEnvelope} className="mr-2 w-4 h-4"/>
-                    <p>{user?.email}</p>
+                    <p>{company?.company.user.email}</p>
                 </span>
+                </div>
             </div>
-        </div>
+        </Link>
     </div>
 );
 
@@ -320,11 +336,9 @@ const JobView = ({
         <p className="text-gray-700 text-md mb-2">
             <strong>Posted:</strong> {formatDistanceToNow(parseISO(job?.post_date), {addSuffix: true, locale: vi})}
         </p>
-        {role === 'company' && isCompanyOwner && job.status === 'Closed' && (
-            <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job.status}</p>
-        )}
+        <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job.status}</p>
         <div className="flex justify-center mt-4 space-x-4">
-            {role === 'candidate' && (
+            {role === 'candidate' && job.status === 'Activated' && (
                 <div className="flex justify-center mt-4">
                     <button
                         className="bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -351,14 +365,7 @@ const JobView = ({
                 </div>
             )}
             {role === 'admin' && (
-                <div className="flex justify-center mt-4">
-                    <button
-                        className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                        onClick={onClose}
-                    >
-                        Hide Job
-                    </button>
-                </div>
+                <AdminButtonsProfile object={job} type={'jobs'}/>
             )}
             {role === 'company' ? (
                 <ConfirmationPopup show={showPopup} title="Close job"

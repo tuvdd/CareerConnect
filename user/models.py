@@ -28,7 +28,6 @@ class User(AbstractBaseUser):
 
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate')
-    # Add any additional fields required for user registration
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -44,8 +43,8 @@ class Candidate(models.Model):
     birthday = models.DateField()
     address = models.CharField(max_length=200)
     gender = models.CharField(max_length=10)
-    resumes = ArrayField(models.TextField(), null=True, blank=True)  # Sử dụng ArrayField để lưu trữ danh sách các đường dẫn
-    active = models.CharField(max_length=100, default="Activated")
+    resumes = ArrayField(models.TextField(), null=True, blank=True)
+    status = models.CharField(max_length=100, default="Activated")
 
 
 class Company(models.Model):
@@ -56,7 +55,7 @@ class Company(models.Model):
     field = models.CharField(max_length=200)
     phone = models.CharField(max_length=20)
     description = models.TextField()
-    active = models.CharField(max_length=100, default="Activated")
+    status = models.CharField(max_length=100, default="Activated")
 
 
 class Admin(models.Model):
