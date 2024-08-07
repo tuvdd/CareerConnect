@@ -6,6 +6,7 @@ import LoadingSpinner from "../../components/Loading";
 import {useAuth} from "../../App";
 
 const Register = () => {
+    const BASE_URL = process.env.REACT_APP_BASE_URL;
     const navigate = useNavigate();
     const { setIsAuthenticated, setRole } = useAuth();
     const [loginForm, setLoginForm] = useState({
@@ -68,7 +69,7 @@ const Register = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await axios.post('http://127.0.0.1:8000/api/login/', loginForm);
+            const response = await axios.post(BASE_URL + 'api/login/', loginForm);
             console.log('Login successful:', response.data);
             localStorage.setItem('token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
@@ -100,7 +101,7 @@ const Register = () => {
                 setError('true');
                 return;
             }
-            apiUrl = 'http://127.0.0.1:8000/api/candidate/register/';
+            apiUrl = BASE_URL + 'api/candidate/register/';
             registerForm = registerCandidateForm;
         }
         else {
@@ -109,7 +110,7 @@ const Register = () => {
                 setError('true');
                 return;
             }
-            apiUrl = 'http://127.0.0.1:8000/api/company/register/';
+            apiUrl = BASE_URL + 'api/company/register/';
             registerForm = registerCompanyForm;
         }
 
