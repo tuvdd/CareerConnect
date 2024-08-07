@@ -1,11 +1,9 @@
-import React, {useState} from "react";
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faLock, faTrashCan, faUnlock} from '@fortawesome/free-solid-svg-icons';
-import ConfirmationPopup from './ConfirmationPopup';
+import React, { useState } from "react";
+import ConfirmationPopup from "./ConfirmationPopup";
 import axiosInstance from "../AxiosConfig";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const AdminButtons = ({object, type}) => {
+const AdminButtonsProfile = ({ object, type }) => {
     const [showConfirmPopup, setShowConfirmPopup] = useState(false);
     const [confirmAction, setConfirmAction] = useState('');
     const navigate = useNavigate();
@@ -39,7 +37,7 @@ const AdminButtons = ({object, type}) => {
         try {
             let response;
             if (confirmAction === 'lock') {
-                response = await axiosInstance.patch(`/api/${type}/${object.id}/`, {status: 'Locked'});
+                response = await axiosInstance.patch(`/api/${type}/${object.id}/`, { status: 'Locked' });
                 if (response.status === 200) {
                     alert("Khóa thành công!");
                     if (type === 'companies') {
@@ -48,7 +46,7 @@ const AdminButtons = ({object, type}) => {
                     navigate(0);
                 }
             } else if (confirmAction === 'unlock') {
-                response = await axiosInstance.patch(`/api/${type}/${object.id}/`, {status: 'Activated'});
+                response = await axiosInstance.patch(`/api/${type}/${object.id}/`, { status: 'Activated' });
                 if (response.status === 200) {
                     alert("Mở khóa thành công!");
                     if (type === 'companies') {
@@ -79,20 +77,28 @@ const AdminButtons = ({object, type}) => {
     };
 
     return (
-        <div className="flex space-x-2">
+        <div className="flex space-x-4">
             {object.status === 'Locked' ? (
-                <button className="py-2 px-1" onClick={() => handleButtonClick('unlock')}>
-                    <FontAwesomeIcon icon={faUnlock}/>
+                <button
+                    onClick={() => { handleButtonClick('unlock') }}
+                    className="w-16 mt-4 bg-green-400 text-white font-bold p-2 rounded"
+                >
+                    Unlock
                 </button>
             ) : (
-                <button className="py-2 px-1" onClick={() => handleButtonClick('lock')}>
-                    <FontAwesomeIcon icon={faLock}/>
+                <button
+                    onClick={() => { handleButtonClick('lock') }}
+                    className="w-16 mt-4 bg-red-400 text-white font-bold p-2 rounded"
+                >
+                    Lock
                 </button>
             )}
-            <button className="py-2 px-1" onClick={() => handleButtonClick('delete')}>
-                <FontAwesomeIcon icon={faTrashCan}/>
+            <button
+                onClick={() => { handleButtonClick('delete') }}
+                className="w-16 mt-4 bg-red-500 text-white font-bold p-2 rounded"
+            >
+                Delete
             </button>
-
             <ConfirmationPopup
                 show={showConfirmPopup}
                 onClose={handleClose}
@@ -101,7 +107,7 @@ const AdminButtons = ({object, type}) => {
                 message={`Are you sure you want to ${confirmAction} this item?`}
             />
         </div>
-    );
-};
+    )
+}
 
-export default AdminButtons;
+export default AdminButtonsProfile;

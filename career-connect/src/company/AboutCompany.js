@@ -4,8 +4,10 @@ import NotificationPopup from "../components/NotificationPopup";
 import ReactQuill from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 import CustomFileInput from "../components/CustomFileInput";
+import AdminButtonsProfile from "../components/AdminButtonsProfile";
 
 const AboutCompany = ({company, isOwner}) => {
+    const role = localStorage.getItem('role');
     const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
     const [isEditing, setIsEditing] = useState(false);
@@ -248,6 +250,9 @@ const AboutCompany = ({company, isOwner}) => {
                                     >
                                         Edit
                                     </button>
+                                )}
+                                {role === 'admin' && (
+                                    <AdminButtonsProfile object={company} type={'companies'} />
                                 )}
                             </>
                         )}

@@ -69,7 +69,22 @@ class LoginAPIView(APIView):
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
-            # User authentication succeeded
+            if user.role == 'candidate':
+                try:
+                    candidate = Candidate.objects.get(user=user)
+                    if candidate.status == 'Locked':
+                        return Response({"error": "Tài khoản của bạn đã bị khóa."}, status=403)
+                except Candidate.DoesNotExist:
+                    return Response({"error": "Không tìm thấy thông tin ứng viên."}, status=404)
+
+            elif user.role == 'company':
+                try:
+                    company = Company.objects.get(user=user)
+                    if company.status == 'Locked':
+                        return Response({"error": "Tài khoản công ty của bạn đã bị khóa."}, status=403)
+                except Company.DoesNotExist:
+                    return Response({"error": "Không tìm thấy thông tin công ty."}, status=404)
+
             refresh = RefreshToken.for_user(user)
 
             return Response(
@@ -80,8 +95,7 @@ class LoginAPIView(APIView):
                 }
             )
         else:
-            # User authentication failed
-            return Response({"error": "Invalid credentials"}, status=401)
+            return Response({"error": "Thông tin đăng nhập không hợp lệ."}, status=401)
 
 
 class CandidateListAPIView(generics.ListAPIView):
