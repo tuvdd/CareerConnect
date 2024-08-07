@@ -3,9 +3,11 @@ import axios from 'axios';
 import {useNavigate} from 'react-router-dom';
 import NotificationPopup from "../../components/NotificationPopup";
 import LoadingSpinner from "../../components/Loading";
+import {useAuth} from "../../App";
 
 const Register = () => {
     const navigate = useNavigate();
+    const { setIsAuthenticated, setRole } = useAuth();
     const [loginForm, setLoginForm] = useState({
         email: '',
         password: '',
@@ -71,6 +73,8 @@ const Register = () => {
             localStorage.setItem('token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
             localStorage.setItem('role', response.data.redirect_url);
+            setIsAuthenticated(true);
+            setRole(response.data.redirect_url);
             navigate("/home");
         } catch (error) {
             console.error('Login failed:', error.response?.data || error.message);
