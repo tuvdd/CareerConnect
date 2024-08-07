@@ -12,6 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from config import settings
 from .models import User, Candidate, Company, Admin
+from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (
     UserSerializer,
     CandidateRegisterSerializer,
@@ -113,7 +114,7 @@ class CandidateListAPIView(generics.ListAPIView):
 class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Candidate.objects.all()
     serializer_class = CandidateSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]
 
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -126,6 +127,9 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
         if image_files:
             image = image_files[0]
+            if not image.name.endswith('.png'):
+                return Response({'error': 'File type not supported. Please upload a PNG image.'}, 
+                                status=status.HTTP_400_BAD_REQUEST)
             ext = os.path.splitext(image.name)[1]
             unique_filename = f"candidate_{instance.id}_image{ext}"
 
@@ -141,6 +145,9 @@ class CandidateDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         if resume_files:
             new_resume_urls = []
             for resume in resume_files:
+                if not resume.name.endswith('.pdf'):
+                    return Response({'error': 'File type not supported. Please upload a PDF resume.'}, 
+                                    status=status.HTTP_400_BAD_REQUEST)
                 unique_filename = resume.name
                 path_on_cloud = f"candidates/{instance.id}/resumes/{unique_filename}"
 
@@ -211,7 +218,7 @@ class ResumeDownloadAPIView(APIView):
 
 
 class ResumeDeleteAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]
 
     def delete(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
@@ -253,7 +260,7 @@ class CompanyListAPIView(generics.ListAPIView):
 class CompanyDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]
 
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -307,4 +314,4 @@ class AdminListAPIView(generics.ListAPIView):
 class AdminDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Admin.objects.all()
     serializer_class = AdminSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]

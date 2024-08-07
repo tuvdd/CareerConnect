@@ -4,6 +4,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Job, Application
+from .permissions import IsOwnerOrAdminOrReadOnly
+
 from .serializers import JobSerializer, ApplicationSerializer, CreateJobSerializer, CreateApplicationSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
@@ -51,7 +53,7 @@ class JobListAPIView(generics.ListAPIView):
 class JobDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Job.objects.all()
     serializer_class = JobSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]
 
     def destroy(self, request, *args, **kwargs):
         job = self.get_object()
@@ -122,4 +124,4 @@ class ApplicationListByCandidateAPIView(generics.ListAPIView):
 class ApplicationDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]

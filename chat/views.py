@@ -6,6 +6,12 @@ from .models import ChatRoom, Message
 from .serializers import ChatRoomSerializer, MessageSerializer
 from rest_framework.response import Response
 
+def index(request):
+    return render(request, "chat/index.html")
+
+def room(request, room_name):
+    return render(request, "chat/room.html", {"room_name": room_name})
+
 class ChatRoomViewSet(viewsets.ModelViewSet):
     queryset = ChatRoom.objects.all()
     serializer_class = ChatRoomSerializer
