@@ -1,5 +1,5 @@
 # CareerConnect
-## Deploy link: 
+## Deploy link:  [Link](https://careerconnect-fe.onrender.com)
 ## Technical:
 - Back-end: Django Rest Framework
 - Front-end: Reactjs, Tailwind
@@ -11,6 +11,7 @@
 - Django REST Framework: 3.15.2
 - Node: 10.5.0
 - React: 18.3.1
+- Postgres: 16
 
 ### Cài đặt và chạy project:
 1. Cách cài đặt project:  
