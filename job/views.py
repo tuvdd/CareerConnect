@@ -1,5 +1,5 @@
 from django.db.models import Count
-from rest_framework import generics, permissions, filters, status
+from rest_framework import generics, permissions, filters, status, viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -44,9 +44,8 @@ class JobListAPIView(generics.ListAPIView):
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    # filterset_fields = ["title", "description"]
     filterset_class = JobFilter
-    search_fields = ["title", "description", "company__name"]
+    search_fields = ["title", "company__name"]
 
 
 class JobDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
