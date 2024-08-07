@@ -12,6 +12,7 @@ import ConfirmationPopup from "../components/ConfirmationPopup";
 import {formatDistanceToNow, parseISO} from "date-fns";
 import {vi} from "date-fns/locale";
 import ApplicationModal from "./ApplicationModal";
+import AdminButtonsProfile from "../components/AdminButtonsProfile";
 
 const JobDetail = () => {
     const {id} = useParams();
@@ -335,11 +336,9 @@ const JobView = ({
         <p className="text-gray-700 text-md mb-2">
             <strong>Posted:</strong> {formatDistanceToNow(parseISO(job?.post_date), {addSuffix: true, locale: vi})}
         </p>
-        {role === 'company' && isCompanyOwner && job.status === 'Closed' && (
-            <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job.status}</p>
-        )}
+        <p className="text-gray-700 text-md mb-2"><strong>Status:</strong> {job.status}</p>
         <div className="flex justify-center mt-4 space-x-4">
-            {role === 'candidate' && (
+            {role === 'candidate' && job.status === 'Activated' && (
                 <div className="flex justify-center mt-4">
                     <button
                         className="bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
@@ -366,14 +365,7 @@ const JobView = ({
                 </div>
             )}
             {role === 'admin' && (
-                <div className="flex justify-center mt-4">
-                    <button
-                        className="bg-red-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                        onClick={onClose}
-                    >
-                        Hide Job
-                    </button>
-                </div>
+                <AdminButtonsProfile object={job} type={'jobs'}/>
             )}
             {role === 'company' ? (
                 <ConfirmationPopup show={showPopup} title="Close job"

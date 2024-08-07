@@ -53,6 +53,12 @@ class JobDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JobSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def destroy(self, request, *args, **kwargs):
+        job = self.get_object()
+        Application.objects.filter(job=job).delete()
+        self.perform_destroy(job)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class JobListByCompanyAPIView(generics.ListAPIView):
     serializer_class = JobSerializer

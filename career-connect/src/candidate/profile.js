@@ -5,9 +5,11 @@ import NotificationPopup from "../components/NotificationPopup";
 import LoadingSpinner from "../components/Loading";
 import CustomFileInput from "../components/CustomFileInput";
 import {useParams} from "react-router-dom";
+import AdminButtonsProfile from "../components/AdminButtonsProfile";
 
 const CandidateProfile = () => {
     const { candidateId } = useParams();
+    const role = localStorage.getItem('role');
     const [currentUser, setCurrentUser] = useState(null);
     const [candidate, setCandidate] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -396,6 +398,9 @@ const CandidateProfile = () => {
                                     >
                                         Edit
                                     </button>
+                                )}
+                                {role === 'admin' && (
+                                    <AdminButtonsProfile object={candidate} type={'candidates'} />
                                 )}
                             </>
                         )}
