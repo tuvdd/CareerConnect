@@ -1,12 +1,13 @@
 import json
+
 from channels.generic.websocket import AsyncWebsocketConsumer
-from asgiref.sync import sync_to_async
-from .models import Message
+from .models import Message, ChatRoom
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
+        self.room_group_name = f'chat_{self.room_name}'
 
         # Join room group
         await self.channel_layer.group_add(
@@ -29,13 +30,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
 
         # Save message to database
-        await self.save_message(message)
+        await self.save_message_to_database(message)
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'chat_message',
+                'type': 'chat.message',
                 'message': message
             }
         )
@@ -49,7 +50,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': message
         }))
 
-    @sync_to_async
-    def save_message(self, message):
-        # Save message to database
-        Message.objects.create(content=message)
+    async def save_message_to_database(self, message):
+        # Find or create the chat room
+        chat_room, created = ChatRoom.objects.get_or_create(
+            company=self.scope['user'].company,
+            candidate=self.scope['user'].candidate
+        )
+
+        # Create a new Message instance and save it to the database
+        new_message = Message(chat_room=chat_room, sender=self.scope['user'], content=message)
+        new_message.save()
+    
+    async def disconnect(self, close_code):
+        # Find the chat room
+        chat_room, created = ChatRoom.objects.get_or_create(
+            company=self.scope['user'].company,
+            candidate=self.scope['user'].candidate
+        )
+
+        # Update the last sent message in the ChatRoom object
+        chat_room.last_sent_message = Message.objects.latest('timestamp')
+        chat_room.save()
+
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
