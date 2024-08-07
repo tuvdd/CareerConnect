@@ -218,7 +218,7 @@ class ResumeDownloadAPIView(APIView):
 
 
 class ResumeDeleteAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
@@ -228,6 +228,8 @@ class ResumeDeleteAPIView(APIView):
             instance = Candidate.objects.get(pk=pk)
             if resume_url:
                 try:
+                    if not request.user.role == 'admin' and request.user.id != instance.user.id:
+                        return Response({'error': 'You are not allowed to delete this resume'}, status=status.HTTP_403_FORBIDDEN)
                     instance.resumes.remove(resume_url)
                     instance.save()
                     response = requests.delete(resume_url)
