@@ -40,20 +40,20 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 FIREBASE_CONFIG = {
-    "apiKey": env('FIREBASE_API_KEY'),
-    "authDomain": env('FIREBASE_AUTH_DOMAIN'),
+    "apiKey": os.getenv('FIREBASE_API_KEY'),
+    "authDomain": os.getenv('FIREBASE_AUTH_DOMAIN'),
     "databaseURL": '',
-    "projectId": env('FIREBASE_PROJECT_ID'),
-    "storageBucket": env('FIREBASE_STORAGE_BUCKET'),
-    "messagingSenderId": env('FIREBASE_SENDER_ID'),
-    "appId": env('FIREBASE_APP_ID'),
-    "measurementId": env('FIREBASE_MEASUREMENT_ID')
+    "projectId": os.getenv('FIREBASE_PROJECT_ID'),
+    "storageBucket": os.getenv('FIREBASE_STORAGE_BUCKET'),
+    "messagingSenderId": os.getenv('FIREBASE_SENDER_ID'),
+    "appId": os.getenv('FIREBASE_APP_ID'),
+    "measurementId": os.getenv('FIREBASE_MEASUREMENT_ID')
 }
 
 firebase = pyrebase.initialize_app(FIREBASE_CONFIG)
@@ -130,7 +130,7 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(default=env('DATABASE_URL')),
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL')),
     'channels_postgres': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('POSTGRES_DB'),
