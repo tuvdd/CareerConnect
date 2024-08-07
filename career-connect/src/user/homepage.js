@@ -1,11 +1,12 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Navbar from '../components/navbar';
-import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faMagnifyingGlass} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import JobCard from '../components/JobCard';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import axiosInstance from '../AxiosConfig';
 import LoadingSpinner from "../components/Loading";
+import SearchSuggestion from '../components/SearchSuggestion';
 
 const Homepage = () => {
     const [loading, setLoading] = useState(true);
@@ -14,26 +15,30 @@ const Homepage = () => {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const suggestionRef = useRef(false);
 
     const pageSize = 5;
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            try {
-                const response = await axiosInstance.get(`api/jobs/?status=Activated`);
-                const allJobs = response.data;
-                setJobs(allJobs);
-                setDisplayedJobs(allJobs.slice(0, pageSize));
-                setHasMore(allJobs.length > pageSize);
-            } catch (error) {
-                console.error('Error fetching jobs:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchJobs();
     }, []);
+
+    const fetchJobs = async (searchQuery = '') => {
+        try {
+            setLoading(true);
+            const response = await axiosInstance.get('/api/jobs/', {
+                params: { search: searchQuery, status: 'Activated' },
+            });
+            setJobs(response.data);
+            setDisplayedJobs(response.data.slice(0, pageSize));
+            setHasMore(response.data.length > pageSize);
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const loadMoreJobs = () => {
         const start = page * pageSize;
@@ -46,23 +51,80 @@ const Homepage = () => {
         setHasMore(end < jobs.length);
     };
 
-    const handleSearchSubmit = (e) => {
+    const handleSearchSubmit = async (e) => {
         e.preventDefault();
         setPage(1);
+        fetchJobs(searchQuery);
     };
 
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
+    const handleSearchChange = async (e) => {
+        const value = e.target.value;
+        setSearchQuery(value);
+
+        if (value.trim() !== '') {
+            try {
+                const response = await axiosInstance.get('/api/jobs/', {
+                    params: {
+                        search: value,
+                        status: 'Activated',
+                    },
+                });
+                const jobTitles = response.data.map((job) => job.title);
+                setSuggestions(jobTitles);
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+            }
+        } else {
+            setSuggestions([]);
+        }
     };
 
-    if (loading) return <LoadingSpinner/>;
+    const handleSelectSuggestion = async (suggestion) => {
+        setSearchQuery(suggestion);
+        setSuggestions([]);
+        setPage(1);
+        fetchJobs(suggestion);
+    };
+
+    const handleSearchBlur = () => {
+        if (!suggestionRef.current) {
+            setSuggestions([]);
+        }
+    };
+
+    const handleSearchFocus = async () => {
+        if (searchQuery.trim() !== '') {
+            try {
+                const response = await axiosInstance.get('/api/jobs/', {
+                    params: {
+                        search: searchQuery,
+                        status: 'Activated',
+                    },
+                });
+                const jobTitles = response.data.map((job) => job.title);
+                setSuggestions(jobTitles);
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+            }
+        }
+    };
+
+    const handleSuggestionMouseDown = () => {
+        suggestionRef.current = true;
+    };
+
+    const handleSuggestionMouseUp = () => {
+        suggestionRef.current = false;
+    };
+
+    if (loading) return <LoadingSpinner />;
 
     return (
         <div className="container bg-gray-100 min-h-screen max-w-screen-2xl pt-20">
-            <Navbar/>
+            <Navbar />
             <div
                 className="container w-full h-60 lg:bg-[url('https://c.topdevvn.com/v4/assets/images/bg-search.jpg')] flex flex-col items-center justify-center p-4">
-                <div className="w-4/5">
+                <div className="w-4/5 relative">
                     <h1 className="text-3xl font-bold mb-4">Tìm kiếm</h1>
                     <form
                         onSubmit={handleSearchSubmit}
@@ -72,6 +134,8 @@ const Homepage = () => {
                             type="text"
                             value={searchQuery}
                             onChange={handleSearchChange}
+                            onFocus={handleSearchFocus}
+                            onBlur={handleSearchBlur}
                             placeholder="Tìm kiếm theo các Kỹ năng, Vị trí, Công ty,..."
                             className="flex-grow p-2 focus:outline-none"
                         />
@@ -79,10 +143,18 @@ const Homepage = () => {
                             type="submit"
                             className="ml-2 bg-red-500 text-white font-bold rounded-md p-4 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
                         >
-                            <FontAwesomeIcon icon={faMagnifyingGlass} className="mr-2"/>
+                            <FontAwesomeIcon icon={faMagnifyingGlass} className="mr-2" />
                             Tìm kiếm
                         </button>
                     </form>
+                    {suggestions.length > 0 && (
+                        <SearchSuggestion
+                            suggestions={suggestions}
+                            onSelectSuggestion={handleSelectSuggestion}
+                            onMouseDown={handleSuggestionMouseDown}
+                            onMouseUp={handleSuggestionMouseUp}
+                        />
+                    )}
                 </div>
             </div>
             <div className="container w-full h-fit flex flex-col justify-center items-center">
