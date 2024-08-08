@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from config import settings
 from .models import User, Candidate, Company, Admin
-from .permissions import IsOwnerOrAdminOrReadOnly
+from .permissions import IsOwnerOrAdminOrReadOnly, IsAdmin
 from .serializers import (
     UserSerializer,
     CandidateRegisterSerializer,
@@ -296,7 +296,7 @@ class CompanyDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AdminCreateView(generics.CreateAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdmin]
     queryset = Admin.objects.all()
     serializer_class = AdminCreateSerializer
 
